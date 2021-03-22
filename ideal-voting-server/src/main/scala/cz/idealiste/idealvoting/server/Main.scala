@@ -1,13 +1,13 @@
 package cz.idealiste.idealvoting.server
 
 import cats.data.Kleisli
-import org.http4s.{HttpRoutes, Request, Response}
+import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server._
-import zio.interop.catz._
+import org.http4s.server.blaze.BlazeServerBuilder
 import zio._
+import zio.interop.catz._
 
 object Main extends App {
 
@@ -24,10 +24,10 @@ object Main extends App {
     Router("/v1" -> serviceV1).orNotFound
   }
 
-  val server: ZManaged[Any, Throwable, Server[Task]] = {
+  val server: TaskManaged[Server[Task]] = {
 
     for {
-      server <- ZManaged.runtime.flatMap { implicit r: Runtime[Any] =>
+      server <- Managed.runtime.flatMap { implicit r: Runtime[Any] =>
         import zio.interop.catz.implicits._
         BlazeServerBuilder[Task](r.platform.executor.asEC)
           .bindHttp(8080, "localhost")

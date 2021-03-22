@@ -40,6 +40,9 @@ lazy val commonSettings: List[Def.Setting[_]] = List(
     ),
   ),
   testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+  missinglinkExcludedDependencies ++= List(
+    moduleFilter(organization = "org.slf4j", name = "slf4j-api"),
+  ),
   mimaReportBinaryIssues := {},
 ) ++ DecentScala.decentScalaSettings
 
