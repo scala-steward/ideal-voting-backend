@@ -1,0 +1,29 @@
+pull_request_rules:
+  - name: assign and label scala-steward's PRs
+    conditions:
+      - author=scala-steward
+    actions:
+      assign:
+        users: [sideeffffect]
+      label:
+        add: ["type: dependencies"]
+  - name: merge Scala Steward's PRs
+    conditions:
+      - base=master
+      - author=scala-steward
+      - status-success=ci
+    actions:
+      merge:
+        method: squash
+  - name: automatic merge for master when CI passes
+    conditions:
+      - base=master
+      - label=mergify-merge
+      - "#review-requested=0"
+      - "#changes-requested-reviews-by=0"
+      - status-success=ci
+    actions:
+      merge:
+        method: squash
+      delete_head_branch:
+        force: true
