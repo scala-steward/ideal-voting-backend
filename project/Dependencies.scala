@@ -4,7 +4,7 @@ object Dependencies {
 
   object Versions {
 
-    val http4s = "0.21.18"
+    val http4s = "0.21.20"
     val zio = "1.0.5"
     val zioCats = "2.3.1.0"
 
