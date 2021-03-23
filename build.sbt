@@ -44,6 +44,8 @@ lazy val commonSettings: List[Def.Setting[_]] = List(
     moduleFilter(organization = "org.slf4j", name = "slf4j-api"),
   ),
   mimaReportBinaryIssues := {},
+  // https://github.com/olafurpg/sbt-ci-release/issues/181
+  sonatypeCredentialHost := "s01.oss.sonatype.org",
 ) ++ DecentScala.decentScalaSettings
 
 addCommandAlias("ci", "; check; publishLocal")
