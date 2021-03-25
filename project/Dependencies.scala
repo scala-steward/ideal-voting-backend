@@ -7,7 +7,7 @@ object Dependencies {
     val doobie = "0.12.1"
     val circe = "0.13.0"
     val http4s = "0.21.20"
-    val liquibase = "4.3.1"
+    val liquibase = "4.3.2"
     val logback = "1.2.3"
     val mariadb = "2.7.2"
     val snakeyaml = "1.28"
