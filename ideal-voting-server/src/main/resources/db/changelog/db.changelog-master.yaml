@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: idealvoting
+      changes:
+        - createTable:
+            tableName: election
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+        - createTable:
+            tableName: admin
+            columns:
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: admin election id
+                    nullable: false
+        - createTable:
+            tableName: option
+            columns:
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: option election id
+                    nullable: false
+        - createTable:
+            tableName: voter
+            columns:
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: voter election id
+                    nullable: false
+  - changeSet:
+      id: 2
+      author: idealvoting
+      changes:
+        - addColumn:
+            tableName: election
+            columns:
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: admin
+            columns:
+              - column:
+                  name: admin
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+        - addColumn:
+            tableName: option
+            columns:
+              - column:
+                  name: option
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: voter
+            columns:
+              - column:
+                  name: voter
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true

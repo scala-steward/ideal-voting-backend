@@ -1,0 +1,11 @@
+version: '2'
+services:
+  mariadb:
+    image: "mariadb:10.5.9"
+    ports:
+      - "3306"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: random
+      MYSQL_DATABASE: idealvoting
+      MYSQL_USER: idealvoting
+      MYSQL_PASSWORD: idealvoting
