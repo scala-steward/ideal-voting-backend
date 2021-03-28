@@ -7,12 +7,12 @@ import cz.idealiste.idealvoting.server.Http._
 import cz.idealiste.idealvoting.server.TestContainer.DockerCompose
 import org.http4s._
 import org.http4s.implicits._
-import zio.blocking.Blocking
 import zio._
+import zio.blocking.Blocking
+import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.TestEnvironment
-import zio.interop.catz._
 
 object MainSpec extends DefaultRunnableSpec {
 
@@ -55,7 +55,7 @@ object MainSpec extends DefaultRunnableSpec {
             ElectionViewAdmin(
               "election1",
               "admin1",
-              Map("voter1@x.com" -> ("voter1@x.com", false), "voter2@y.org" -> ("voter2@y.org", false)),
+              Map("voter1@x.com" -> (("voter1@x.com", false)), "voter2@y.org" -> (("voter2@y.org", false))),
               Map(0 -> "option1", 1 -> "option2"),
             ),
           ),

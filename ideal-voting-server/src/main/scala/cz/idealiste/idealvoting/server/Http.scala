@@ -83,7 +83,7 @@ object Http {
       circeEntityDecoder[EnvTask, CreateElectionResponse]
   }
 
-  case class ElectionView(
+  final case class ElectionView(
       name: String,
       admin: String,
       voterFullname: String,
@@ -98,7 +98,7 @@ object Http {
       circeEntityEncoder[EnvTask, ElectionView]
   }
 
-  case class ElectionViewAdmin(
+  final case class ElectionViewAdmin(
       name: String,
       admin: String,
       voters: Map[String, (String, Boolean)],
