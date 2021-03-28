@@ -2,9 +2,6 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / turbo := true
 ThisBuild / scalaVersion := "2.13.5"
 
-// https://github.com/olafurpg/sbt-ci-release/issues/181
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
@@ -59,6 +56,9 @@ lazy val commonSettings: List[Def.Setting[_]] = List(
     moduleFilter(organization = "org.slf4j", name = "slf4j-api"),
   ),
   mimaReportBinaryIssues := {},
+  // https://github.com/olafurpg/sbt-ci-release/issues/181
+  ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org",
+  ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
 ) ++ DecentScala.decentScalaSettings
 
 addCommandAlias("ci", "; check; publishLocal")
