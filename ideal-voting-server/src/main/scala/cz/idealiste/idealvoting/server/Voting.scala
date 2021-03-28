@@ -4,26 +4,41 @@ import cats.implicits._
 import cz.idealiste.idealvoting.server.Http._
 import zio.interop.catz.core._
 import zio.random.Random
-import zio.{RIO, random}
+import zio.{RIO, Task, random}
 
 class Voting(config: Config.Voting, db: Db) {
 
-  def createElections(request: CreateElectionsRequest): RIO[Random, String] = {
+  def createElection(request: CreateElectionRequest): RIO[Random, String] = {
     for {
-      adminToken <- random.nextString(config.tokenLength)
+      adminToken <- random
+        .nextIntBetween(97, 123)
+        .replicateM(config.tokenLength)
+        .map(_.map(_.toChar).mkString)
       votersAndTokens <- request.voters.traverse { voter =>
-        random.nextString(config.tokenLength).map((voter, _))
+        random
+          .nextIntBetween(97, 123)
+          .replicateM(config.tokenLength)
+          .map(_.map(_.toChar).mkString)
+          .map((voter, _))
       }
-      _ <- db.createElections(
+      votersNormalizedAndTokens = votersAndTokens.map { case (voterFullname, token) =>
+        (voterFullname, voterFullname, token, false)
+      }
+      _ <- db.createElection(
         request.name,
         (request.admin, adminToken),
-        request.options,
-        votersAndTokens,
+        request.options.zipWithIndex,
+        votersNormalizedAndTokens,
       )
     } yield adminToken
   }
 
-  def viewElections(token: String): ElectionsView = {
-    ElectionsView.Voter("", token, List())
+  def viewElection(token: String): Task[ElectionView] = {
+    db.viewElection(token)
   }
+
+  def viewElectionAdmin(token: String): Task[ElectionViewAdmin] = {
+    db.viewElectionAdmin(token)
+  }
+
 }

@@ -22,6 +22,7 @@ databaseChangeLog:
                     references: election (id)
                     foreignKeyName: admin election id
                     nullable: false
+                    unique: true
         - createTable:
             tableName: option
             columns:
@@ -76,6 +77,11 @@ databaseChangeLog:
                   type: varchar(255)
                   constraints:
                     nullable: false
+              - column:
+                  name: option_id
+                  type: int
+                  constraints:
+                    nullable: false
         - addColumn:
             tableName: voter
             columns:
@@ -85,8 +91,42 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: voter_fullname
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
                   name: token
                   type: varchar(255)
                   constraints:
                     nullable: false
                     unique: true
+              - column:
+                  name: voted
+                  type: bool
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 3
+      author: idealvoting
+      changes:
+        - createIndex:
+            clustered: true
+            columns:
+              - column:
+                  name: election_id
+              - column:
+                  name: option_id
+            indexName: idx_option_unique_electionid_optionid
+            tableName: option
+            unique: true
+        - createIndex:
+            clustered: true
+            columns:
+              - column:
+                  name: election_id
+              - column:
+                  name: voter
+            indexName: idx_voter_unique_electionid_voter
+            tableName: voter
+            unique: true
