@@ -118,27 +118,27 @@ databaseChangeLog:
                   type: bool
                   constraints:
                     nullable: false
-#  - changeSet:
-#      id: 3
-#      author: idealvoting
-#      changes:
-#        - createIndex:
-#            clustered: true
-#            columns:
-#              - column:
-#                  name: election_id
-#              - column:
-#                  name: option_id
-#            indexName: idx_option_unique_electionid_optionid
-#            tableName: option
-#            unique: true
-#        - createIndex:
-#            clustered: true
-#            columns:
-#              - column:
-#                  name: election_id
-#              - column:
-#                  name: email
-#            indexName: idx_voter_unique_electionid_voter
-#            tableName: voter
-#            unique: true
+  - changeSet:
+      id: 3
+      author: idealvoting
+      changes:
+        - createIndex:
+            clustered: true
+            columns:
+              - column:
+                  name: election_id
+              - column:
+                  name: option_id
+            indexName: idx_option_unique_electionid_optionid
+            tableName: option
+            unique: true
+        - createIndex:
+            clustered: true
+            columns:
+              - column:
+                  name: election_id
+              - column:
+                  name: email
+            indexName: idx_voter_unique_electionid_voter
+            tableName: voter
+            unique: true

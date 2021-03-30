@@ -32,7 +32,7 @@ object MainSpec extends DefaultRunnableSpec {
       },
       testM("/election POST should create an election") {
         val request = CreateElectionRequest(
-          "election1",
+          "election 1",
           None,
           "admin1@a.net",
           List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", None)),
@@ -52,20 +52,33 @@ object MainSpec extends DefaultRunnableSpec {
           } yield response
         }
         assertM(response)(
-          equalTo(
-            GetElectionAdminResponse(
-              "election1",
-              "election1",
-              None,
-              "admin1@a.net",
-              "",
-              List(GetOptionResponse(0, "option1", None), GetOptionResponse(1, "option2", None)),
-              List(
-                GetVoterResponse("voter1@x.com", voted = false),
-                GetVoterResponse("voter2@y.org", voted = false),
+          hasField("title", (r: GetElectionAdminResponse) => r.title, equalTo("election 1")) &&
+            hasField(
+              "titleMangled",
+              (r: GetElectionAdminResponse) => r.titleMangled,
+              equalTo("election-1"),
+            ) &&
+            hasField(
+              "description",
+              (r: GetElectionAdminResponse) => r.description,
+              equalTo(None: Option[String]),
+            ) &&
+            hasField("admin", (r: GetElectionAdminResponse) => r.admin, equalTo("admin1@a.net")) &&
+            hasField(
+              "options",
+              (r: GetElectionAdminResponse) => r.options,
+              equalTo(List(GetOptionResponse(0, "option1", None), GetOptionResponse(1, "option2", None))),
+            ) &&
+            hasField(
+              "voters",
+              (r: GetElectionAdminResponse) => r.voters,
+              equalTo(
+                List(
+                  GetVoterResponse("voter1@x.com", voted = false),
+                  GetVoterResponse("voter2@y.org", voted = false),
+                ),
               ),
             ),
-          ),
         )
       },
     )
