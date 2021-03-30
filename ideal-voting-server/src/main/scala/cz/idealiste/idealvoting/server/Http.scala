@@ -2,6 +2,9 @@ package cz.idealiste.idealvoting.server
 
 import cats.implicits.showInterpolator
 import cz.idealiste.idealvoting.server.Http._
+import cz.idealiste.idealvoting.server.Voting._
+import emil.MailAddress
+import emil.javamail.syntax._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import org.http4s.circe.CirceEntityDecoder.circeEntityDecoder
@@ -27,19 +30,47 @@ class Http(voting: Voting) {
       case req @ POST -> Root / "election" =>
         for {
           req <- req.as[CreateElectionRequest]
-          adminToken <- voting.createElection(req)
-          resp = CreateElectionResponse(show"v1/election/admin/$adminToken")
+          createElection = CreateElection(
+            req.title,
+            req.description,
+            MailAddress.parseUnsafe(req.admin),
+            req.options.map(req => CreateOption(req.title, req.description)),
+            req.voters.map(MailAddress.parseUnsafe),
+          )
+          electionViewAdmin <- voting.createElection(createElection)
+          resp = CreateElectionResponse(
+            show"v1/election/admin/${electionViewAdmin.metadata.titleMangled}/${electionViewAdmin.admin.token}",
+          )
           resp <- Created(resp)
         } yield resp
-      case GET -> Root / "election" / token =>
+      case GET -> Root / "election" / _ / token =>
         for {
           electionView <- voting.viewElection(token)
-          resp <- Ok(electionView)
+          resp = GetElectionResponse(
+            electionView.metadata.title,
+            electionView.metadata.titleMangled,
+            electionView.metadata.description,
+            electionView.admin.email.displayString,
+            electionView.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
+            electionView.voter.email.displayString,
+            electionView.voter.token,
+            electionView.voter.voted,
+          )
+          resp <- Ok(resp)
         } yield resp
-      case GET -> Root / "election" / "admin" / token =>
+      case GET -> Root / "election" / "admin" / _ / token =>
         for {
           electionViewAdmin <- voting.viewElectionAdmin(token)
-          resp <- Ok(electionViewAdmin)
+          resp = GetElectionAdminResponse(
+            electionViewAdmin.metadata.title,
+            electionViewAdmin.metadata.titleMangled,
+            electionViewAdmin.metadata.description,
+            electionViewAdmin.admin.email.displayString,
+            electionViewAdmin.admin.token,
+            electionViewAdmin.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
+            electionViewAdmin.voters.map(v => GetVoterResponse(v.email.displayString, v.voted)),
+          )
+          resp <- Ok(resp)
         } yield resp
 
     }
@@ -52,14 +83,22 @@ class Http(voting: Voting) {
 
 object Http {
 
-  //  case class Email(raw: String)
-  //  case class BallotOption(raw: String)
-  //  case class CreateElections(name: String, author: Email, options: List[BallotOption], voters: List[Email])
+  final case class CreateOptionRequest(title: String, description: Option[String])
+
+  object CreateOptionRequest {
+    implicit val decoder: Decoder[CreateOptionRequest] = deriveDecoder[CreateOptionRequest]
+    implicit val encoder: Encoder[CreateOptionRequest] = deriveEncoder[CreateOptionRequest]
+    implicit val entityDecoder: EntityDecoder[EnvTask, CreateOptionRequest] =
+      circeEntityDecoder[EnvTask, CreateOptionRequest]
+    implicit val entityEncoder: EntityEncoder[EnvTask, CreateOptionRequest] =
+      circeEntityEncoder[EnvTask, CreateOptionRequest]
+  }
 
   final case class CreateElectionRequest(
-      name: String,
+      title: String,
+      description: Option[String],
       admin: String,
-      options: List[String],
+      options: List[CreateOptionRequest],
       voters: List[String],
   )
 
@@ -83,35 +122,67 @@ object Http {
       circeEntityDecoder[EnvTask, CreateElectionResponse]
   }
 
-  final case class ElectionView(
-      name: String,
-      admin: String,
-      voterFullname: String,
-      voter: String,
-      voted: Boolean,
-      options: Map[Int, String],
-  )
+  final case class GetOptionResponse(id: Int, title: String, description: Option[String])
 
-  object ElectionView {
-    implicit val encoder: Encoder[ElectionView] = deriveEncoder[ElectionView]
-    implicit val entityEncoder: EntityEncoder[EnvTask, ElectionView] =
-      circeEntityEncoder[EnvTask, ElectionView]
+  object GetOptionResponse {
+    implicit val encoder: Encoder[GetOptionResponse] = deriveEncoder[GetOptionResponse]
+    implicit val entityEncoder: EntityEncoder[EnvTask, GetOptionResponse] =
+      circeEntityEncoder[EnvTask, GetOptionResponse]
+    implicit val decoder: Decoder[GetOptionResponse] = deriveDecoder[GetOptionResponse]
+    implicit val entityDecoder: EntityDecoder[EnvTask, GetOptionResponse] =
+      circeEntityDecoder[EnvTask, GetOptionResponse]
   }
 
-  final case class ElectionViewAdmin(
-      name: String,
+  final case class GetElectionResponse(
+      title: String,
+      titleMangled: String,
+      description: Option[String],
       admin: String,
-      voters: Map[String, (String, Boolean)],
-      options: Map[Int, String],
+      options: List[GetOptionResponse],
+      voter: String,
+      voterToken: String,
+      voterVoted: Boolean,
   )
 
-  object ElectionViewAdmin {
-    implicit val decoder: Decoder[ElectionViewAdmin] = deriveDecoder[ElectionViewAdmin]
-    implicit val entityDecoder: EntityDecoder[EnvTask, ElectionViewAdmin] =
-      circeEntityDecoder[EnvTask, ElectionViewAdmin]
-    implicit val encoder: Encoder[ElectionViewAdmin] = deriveEncoder[ElectionViewAdmin]
-    implicit val entityEncoder: EntityEncoder[EnvTask, ElectionViewAdmin] =
-      circeEntityEncoder[EnvTask, ElectionViewAdmin]
+  object GetElectionResponse {
+    implicit val encoder: Encoder[GetElectionResponse] = deriveEncoder[GetElectionResponse]
+    implicit val entityEncoder: EntityEncoder[EnvTask, GetElectionResponse] =
+      circeEntityEncoder[EnvTask, GetElectionResponse]
+    implicit val decoder: Decoder[GetElectionResponse] = deriveDecoder[GetElectionResponse]
+    implicit val entityDecoder: EntityDecoder[EnvTask, GetElectionResponse] =
+      circeEntityDecoder[EnvTask, GetElectionResponse]
+
+  }
+
+  final case class GetVoterResponse(voter: String, voted: Boolean)
+
+  object GetVoterResponse {
+    implicit val encoder: Encoder[GetVoterResponse] = deriveEncoder[GetVoterResponse]
+    implicit val entityEncoder: EntityEncoder[EnvTask, GetVoterResponse] =
+      circeEntityEncoder[EnvTask, GetVoterResponse]
+    implicit val decoder: Decoder[GetVoterResponse] = deriveDecoder[GetVoterResponse]
+    implicit val entityDecoder: EntityDecoder[EnvTask, GetVoterResponse] =
+      circeEntityDecoder[EnvTask, GetVoterResponse]
+  }
+
+  final case class GetElectionAdminResponse(
+      title: String,
+      titleMangled: String,
+      description: Option[String],
+      admin: String,
+      adminToken: String,
+      options: List[GetOptionResponse],
+      voters: List[GetVoterResponse],
+  )
+
+  object GetElectionAdminResponse {
+    implicit val encoder: Encoder[GetElectionAdminResponse] = deriveEncoder[GetElectionAdminResponse]
+    implicit val entityEncoder: EntityEncoder[EnvTask, GetElectionAdminResponse] =
+      circeEntityEncoder[EnvTask, GetElectionAdminResponse]
+    implicit val decoder: Decoder[GetElectionAdminResponse] = deriveDecoder[GetElectionAdminResponse]
+    implicit val entityDecoder: EntityDecoder[EnvTask, GetElectionAdminResponse] =
+      circeEntityDecoder[EnvTask, GetElectionAdminResponse]
+
   }
 
   type Env = Random

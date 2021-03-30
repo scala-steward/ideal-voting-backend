@@ -20,6 +20,8 @@ lazy val server = project
     libraryDependencies ++= List(
       Dependencies.doobie,
       Dependencies.circe,
+      Dependencies.commonsLang,
+      Dependencies.emil,
       Dependencies.http4sCirce,
       Dependencies.http4sDsl,
       Dependencies.http4sServer,

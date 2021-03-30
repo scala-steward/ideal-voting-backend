@@ -6,7 +6,7 @@ Backend for IDEALvoting.
 
 To start the server:
 ```
-> docker-compose up -d
+> docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 > ./sbt server/run
 ```
 
