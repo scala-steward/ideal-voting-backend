@@ -122,7 +122,7 @@ object Http {
       circeEntityDecoder[EnvTask, CreateElectionResponse]
   }
 
-  case class GetOptionResponse(id: Int, title: String, description: Option[String])
+  final case class GetOptionResponse(id: Int, title: String, description: Option[String])
 
   object GetOptionResponse {
     implicit val encoder: Encoder[GetOptionResponse] = deriveEncoder[GetOptionResponse]
@@ -154,7 +154,7 @@ object Http {
 
   }
 
-  case class GetVoterResponse(voter: String, voted: Boolean)
+  final case class GetVoterResponse(voter: String, voted: Boolean)
 
   object GetVoterResponse {
     implicit val encoder: Encoder[GetVoterResponse] = deriveEncoder[GetVoterResponse]

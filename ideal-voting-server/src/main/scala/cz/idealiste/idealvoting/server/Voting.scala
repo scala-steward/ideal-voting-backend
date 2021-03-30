@@ -62,9 +62,9 @@ class Voting(config: Config.Voting, db: Db) {
 
 object Voting {
 
-  case class CreateOption(title: String, description: Option[String])
+  final case class CreateOption(title: String, description: Option[String])
 
-  case class CreateElection(
+  final case class CreateElection(
       title: String,
       description: Option[String],
       admin: MailAddress,
@@ -72,24 +72,24 @@ object Voting {
       voters: List[MailAddress],
   )
 
-  case class ElectionMetadata(title: String, titleMangled: String, description: Option[String])
+  final case class ElectionMetadata(title: String, titleMangled: String, description: Option[String])
 
-  case class Admin(name: Option[String], email: MailAddress, token: String)
+  final case class Admin(name: Option[String], email: MailAddress, token: String)
 
-  case class BallotOption(id: Int, title: String, description: Option[String])
+  final case class BallotOption(id: Int, title: String, description: Option[String])
 
-  case class Voter(name: Option[String], email: MailAddress, token: String, voted: Boolean)
+  final case class Voter(name: Option[String], email: MailAddress, token: String, voted: Boolean)
 
-  case class Election(
+  final case class Election(
       metadata: ElectionMetadata,
       admin: Admin,
       options: List[BallotOption],
       voters: List[Voter],
   )
 
-  case class AdminView(name: Option[String], email: MailAddress)
+  final case class AdminView(name: Option[String], email: MailAddress)
 
-  case class VoterView(name: Option[String], email: MailAddress, voted: Boolean)
+  final case class VoterView(name: Option[String], email: MailAddress, voted: Boolean)
 
   final case class ElectionView(
       metadata: ElectionMetadata,
