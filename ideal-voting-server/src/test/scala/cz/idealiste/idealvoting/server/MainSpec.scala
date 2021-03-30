@@ -33,8 +33,9 @@ object MainSpec extends DefaultRunnableSpec {
       testM("/election POST should create an election") {
         val request = CreateElectionRequest(
           "election1",
-          "admin1",
-          List("option1", "option2"),
+          None,
+          "admin1@a.net",
+          List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", None)),
           List("voter1@x.com", "voter2@y.org"),
         )
         val response = makeApp.use { httpApp =>
@@ -47,16 +48,22 @@ object MainSpec extends DefaultRunnableSpec {
               Request(method = Method.GET, uri = Uri.unsafeFromString(response.election))
                 .withEntity(request),
             )
-            response <- response.as[ElectionViewAdmin]
+            response <- response.as[GetElectionAdminResponse]
           } yield response
         }
         assertM(response)(
           equalTo(
-            ElectionViewAdmin(
+            GetElectionAdminResponse(
               "election1",
-              "admin1",
-              Map("voter1@x.com" -> (("voter1@x.com", false)), "voter2@y.org" -> (("voter2@y.org", false))),
-              Map(0 -> "option1", 1 -> "option2"),
+              "election1",
+              None,
+              "admin1@a.net",
+              "",
+              List(GetOptionResponse(0, "option1", None), GetOptionResponse(1, "option2", None)),
+              List(
+                GetVoterResponse("voter1@x.com", voted = false),
+                GetVoterResponse("voter2@y.org", voted = false),
+              ),
             ),
           ),
         )

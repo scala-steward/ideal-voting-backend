@@ -51,15 +51,26 @@ databaseChangeLog:
             tableName: election
             columns:
               - column:
-                  name: name
+                  name: title
                   type: varchar(255)
                   constraints:
                     nullable: false
+              - column:
+                  name: title_mangled
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
         - addColumn:
             tableName: admin
             columns:
               - column:
-                  name: admin
+                  name: name
+                  type: varchar(255)
+              - column:
+                  name: email
                   type: varchar(255)
                   constraints:
                     nullable: false
@@ -73,10 +84,13 @@ databaseChangeLog:
             tableName: option
             columns:
               - column:
-                  name: option
+                  name: title
                   type: varchar(255)
                   constraints:
                     nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
               - column:
                   name: option_id
                   type: int
@@ -86,12 +100,10 @@ databaseChangeLog:
             tableName: voter
             columns:
               - column:
-                  name: voter
+                  name: name
                   type: varchar(255)
-                  constraints:
-                    nullable: false
               - column:
-                  name: voter_fullname
+                  name: email
                   type: varchar(255)
                   constraints:
                     nullable: false
@@ -106,27 +118,27 @@ databaseChangeLog:
                   type: bool
                   constraints:
                     nullable: false
-  - changeSet:
-      id: 3
-      author: idealvoting
-      changes:
-        - createIndex:
-            clustered: true
-            columns:
-              - column:
-                  name: election_id
-              - column:
-                  name: option_id
-            indexName: idx_option_unique_electionid_optionid
-            tableName: option
-            unique: true
-        - createIndex:
-            clustered: true
-            columns:
-              - column:
-                  name: election_id
-              - column:
-                  name: voter
-            indexName: idx_voter_unique_electionid_voter
-            tableName: voter
-            unique: true
+#  - changeSet:
+#      id: 3
+#      author: idealvoting
+#      changes:
+#        - createIndex:
+#            clustered: true
+#            columns:
+#              - column:
+#                  name: election_id
+#              - column:
+#                  name: option_id
+#            indexName: idx_option_unique_electionid_optionid
+#            tableName: option
+#            unique: true
+#        - createIndex:
+#            clustered: true
+#            columns:
+#              - column:
+#                  name: election_id
+#              - column:
+#                  name: email
+#            indexName: idx_voter_unique_electionid_voter
+#            tableName: voter
+#            unique: true

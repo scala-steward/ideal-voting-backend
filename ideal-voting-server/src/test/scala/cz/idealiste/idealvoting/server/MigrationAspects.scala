@@ -20,7 +20,7 @@ object MigrationAspects {
       dc <- ZIO.service[DockerComposeContainer]
       _ <- effectBlocking(
         runMigration(
-          show"jdbc:mysql://${dc.getServiceHost("mariadb", 3306)}:${dc.getServicePort("mariadb", 3306)}/test",
+          show"jdbc:mysql://${dc.getServiceHost("mariadb_1", 3306)}:${dc.getServicePort("mariadb_1", 3306)}/test",
           "test",
           "test",
           "db/changelog/db.changelog-master.yaml",

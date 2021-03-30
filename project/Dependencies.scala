@@ -6,6 +6,8 @@ object Dependencies {
 
     val doobie = "0.12.1"
     val circe = "0.13.0"
+    val commonsLang = "3.12.0"
+    val emil = "0.7.3"
     val http4s = "0.21.20"
     val liquibase = "4.3.2"
     val logback = "1.2.3"
@@ -20,6 +22,8 @@ object Dependencies {
 
   val doobie = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
   val circe = "io.circe" %% "circe-generic" % Versions.circe
+  val commonsLang = "org.apache.commons" % "commons-lang3" % Versions.commonsLang
+  val emil = "com.github.eikek" %% "emil-doobie" % Versions.emil
   val http4sCirce = "org.http4s" %% "http4s-circe" % Versions.http4s
   val http4sDsl = "org.http4s" %% "http4s-dsl" % Versions.http4s
   val http4sServer = "org.http4s" %% "http4s-blaze-server" % Versions.http4s
