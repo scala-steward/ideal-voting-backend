@@ -8,13 +8,13 @@ object Dependencies {
     val circe = "0.13.0"
     val commonsLang = "3.12.0"
     val emil = "0.7.3"
-    val http4s = "0.21.20"
+    val http4s = "0.21.21"
     val liquibase = "4.3.2"
     val logback = "1.2.3"
     val mariadb = "2.7.2"
     val snakeyaml = "1.28"
     val zio = "1.0.5"
-    val zioCats = "2.3.1.0"
+    val zioCats = "2.4.0.0"
 
     // Test
     val testcontainers = "0.39.3"
