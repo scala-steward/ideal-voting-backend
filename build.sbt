@@ -63,4 +63,4 @@ lazy val commonSettings: List[Def.Setting[_]] = List(
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
 ) ++ DecentScala.decentScalaSettings
 
-addCommandAlias("ci", "; check; publishLocal")
+addCommandAlias("ci", "; check; +publishLocal")

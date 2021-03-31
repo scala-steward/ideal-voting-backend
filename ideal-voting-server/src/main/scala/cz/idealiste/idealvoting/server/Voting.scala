@@ -4,13 +4,13 @@ import cats.implicits._
 import cz.idealiste.idealvoting.server.Voting._
 import emil.MailAddress
 import org.apache.commons.lang3.StringUtils
+import zio._
 import zio.interop.catz.core._
 import zio.random.Random
-import zio.{RIO, Task, random}
 
-class Voting(config: Config.Voting, db: Db) {
+class Voting(config: Config.Voting, db: Db, random: Random.Service) {
 
-  private val generateToken: RIO[Random, String] = random
+  private val generateToken: UIO[String] = random
     .nextIntBetween(97, 123)
     .replicateM(config.tokenLength)
     .map(_.map(_.toChar).mkString)
@@ -30,7 +30,7 @@ class Voting(config: Config.Voting, db: Db) {
     ElectionViewAdmin(election.metadata, election.admin, election.options, voters)
   }
 
-  def createElection(create: CreateElection): RIO[Random, ElectionViewAdmin] = {
+  def createElection(create: CreateElection): Task[ElectionViewAdmin] = {
     for {
       adminToken <- generateToken
       voters <- create.voters.traverse { email =>
@@ -104,4 +104,9 @@ object Voting {
       options: List[BallotOption],
       voters: List[VoterView],
   )
+
+  def make(config: Config.Voting, db: Db, random: Random.Service): Voting = new Voting(config, db, random)
+
+  val layer: URLayer[Has[Config.Voting] with Has[Db] with Has[Random.Service], Has[Voting]] =
+    ZLayer.fromServices[Config.Voting, Db, Random.Service, Voting](make)
 }

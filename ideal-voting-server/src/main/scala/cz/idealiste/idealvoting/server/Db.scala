@@ -1,20 +1,11 @@
 package cz.idealiste.idealvoting.server
 
-import cats.effect.Blocker
 import cz.idealiste.idealvoting.server.Voting._
 import doobie._
-import doobie.hikari.HikariTransactor
 import doobie.implicits._
 import emil.doobie.EmilDoobieMeta._
-import liquibase.database.DatabaseFactory
-import liquibase.database.jvm.JdbcConnection
-import liquibase.resource.ClassLoaderResourceAccessor
-import liquibase.{Contexts, Liquibase}
 import zio._
-import zio.blocking._
 import zio.interop.catz._
-
-import java.sql.Connection
 
 class Db(transactor: Transactor[Task]) {
 
@@ -83,30 +74,9 @@ class Db(transactor: Transactor[Task]) {
 
 object Db {
 
-  private def runMigration(connection: Connection, changeLogFile: String): Unit = {
-    val database = DatabaseFactory
-      .getInstance()
-      .findCorrectDatabaseImplementation(new JdbcConnection(connection))
-    val liquibase = new Liquibase(changeLogFile, new ClassLoaderResourceAccessor(), database)
-    liquibase.update(new Contexts())
-  }
+  def make(transactor: Transactor[Task]): Db = new Db(transactor)
 
-  private def migrate(transactor: Transactor[Task], changeLogFile: String): RIO[Blocking, Unit] = {
-    transactor.connect(transactor.kernel).toManagedZIO.use { connection =>
-      effectBlocking {
-        runMigration(connection, changeLogFile)
-      }
-    }
-  }
+  val layer: URLayer[Has[Transactor[Task]], Has[Db]] =
+    ZLayer.fromService[Transactor[Task], Db](new Db(_))
 
-  def make(config: Config.Db): RManaged[Blocking, Db] = Managed.runtime.flatMap { implicit r: Runtime[Any] =>
-    for {
-      ce <- ExecutionContexts.fixedThreadPool[Task](config.threadPoolSize).toManagedZIO
-      be <- Blocker[Task].toManagedZIO
-      transactor <- HikariTransactor
-        .newHikariTransactor[Task](config.driverClassName, config.url, config.user, config.password, ce, be)
-        .toManagedZIO
-      _ <- migrate(transactor, config.changeLogFile).toManaged_
-    } yield new Db(transactor)
-  }
 }

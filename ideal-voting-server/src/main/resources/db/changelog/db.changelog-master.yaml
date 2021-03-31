@@ -123,7 +123,7 @@ databaseChangeLog:
       author: idealvoting
       changes:
         - createIndex:
-            clustered: true
+            clustered: false
             columns:
               - column:
                   name: election_id
@@ -133,7 +133,7 @@ databaseChangeLog:
             tableName: option
             unique: true
         - createIndex:
-            clustered: true
+            clustered: false
             columns:
               - column:
                   name: election_id

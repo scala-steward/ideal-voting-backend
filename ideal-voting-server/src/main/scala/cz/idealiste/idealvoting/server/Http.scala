@@ -11,20 +11,18 @@ import org.http4s.circe.CirceEntityDecoder.circeEntityDecoder
 import org.http4s.circe.CirceEntityEncoder.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.server.{Router, Server}
+import org.http4s.server.Router
 import org.http4s.{EntityDecoder, EntityEncoder, HttpApp, HttpRoutes}
 import zio.interop.catz._
-import zio.random.Random
-import zio.{Managed, RIO, RManaged, Runtime}
+import zio.{Has, Task, URLayer, ZLayer}
 
 class Http(voting: Voting) {
 
   private val serviceV1 = {
-    val Http4sDslTask: Http4sDsl[EnvTask] = Http4sDsl[EnvTask]
+    val Http4sDslTask: Http4sDsl[Task] = Http4sDsl[Task]
     import Http4sDslTask._
 
-    HttpRoutes.of[EnvTask] {
+    HttpRoutes.of[Task] {
       case GET -> Root / "status" =>
         Ok("OK")
       case req @ POST -> Root / "election" =>
@@ -76,7 +74,7 @@ class Http(voting: Voting) {
     }
   }
 
-  val httpApp: HttpApp[EnvTask] =
+  val httpApp: HttpApp[Task] =
     Router("/v1" -> serviceV1).orNotFound
 
 }
@@ -88,10 +86,10 @@ object Http {
   object CreateOptionRequest {
     implicit val decoder: Decoder[CreateOptionRequest] = deriveDecoder[CreateOptionRequest]
     implicit val encoder: Encoder[CreateOptionRequest] = deriveEncoder[CreateOptionRequest]
-    implicit val entityDecoder: EntityDecoder[EnvTask, CreateOptionRequest] =
-      circeEntityDecoder[EnvTask, CreateOptionRequest]
-    implicit val entityEncoder: EntityEncoder[EnvTask, CreateOptionRequest] =
-      circeEntityEncoder[EnvTask, CreateOptionRequest]
+    implicit val entityDecoder: EntityDecoder[Task, CreateOptionRequest] =
+      circeEntityDecoder[Task, CreateOptionRequest]
+    implicit val entityEncoder: EntityEncoder[Task, CreateOptionRequest] =
+      circeEntityEncoder[Task, CreateOptionRequest]
   }
 
   final case class CreateElectionRequest(
@@ -105,32 +103,32 @@ object Http {
   object CreateElectionRequest {
     implicit val decoder: Decoder[CreateElectionRequest] = deriveDecoder[CreateElectionRequest]
     implicit val encoder: Encoder[CreateElectionRequest] = deriveEncoder[CreateElectionRequest]
-    implicit val entityDecoder: EntityDecoder[EnvTask, CreateElectionRequest] =
-      circeEntityDecoder[EnvTask, CreateElectionRequest]
-    implicit val entityEncoder: EntityEncoder[EnvTask, CreateElectionRequest] =
-      circeEntityEncoder[EnvTask, CreateElectionRequest]
+    implicit val entityDecoder: EntityDecoder[Task, CreateElectionRequest] =
+      circeEntityDecoder[Task, CreateElectionRequest]
+    implicit val entityEncoder: EntityEncoder[Task, CreateElectionRequest] =
+      circeEntityEncoder[Task, CreateElectionRequest]
   }
 
   final case class CreateElectionResponse(election: String)
 
   object CreateElectionResponse {
     implicit val encoder: Encoder[CreateElectionResponse] = deriveEncoder[CreateElectionResponse]
-    implicit val entityEncoder: EntityEncoder[EnvTask, CreateElectionResponse] =
-      circeEntityEncoder[EnvTask, CreateElectionResponse]
+    implicit val entityEncoder: EntityEncoder[Task, CreateElectionResponse] =
+      circeEntityEncoder[Task, CreateElectionResponse]
     implicit val decoder: Decoder[CreateElectionResponse] = deriveDecoder[CreateElectionResponse]
-    implicit val entityDecoder: EntityDecoder[EnvTask, CreateElectionResponse] =
-      circeEntityDecoder[EnvTask, CreateElectionResponse]
+    implicit val entityDecoder: EntityDecoder[Task, CreateElectionResponse] =
+      circeEntityDecoder[Task, CreateElectionResponse]
   }
 
   final case class GetOptionResponse(id: Int, title: String, description: Option[String])
 
   object GetOptionResponse {
     implicit val encoder: Encoder[GetOptionResponse] = deriveEncoder[GetOptionResponse]
-    implicit val entityEncoder: EntityEncoder[EnvTask, GetOptionResponse] =
-      circeEntityEncoder[EnvTask, GetOptionResponse]
+    implicit val entityEncoder: EntityEncoder[Task, GetOptionResponse] =
+      circeEntityEncoder[Task, GetOptionResponse]
     implicit val decoder: Decoder[GetOptionResponse] = deriveDecoder[GetOptionResponse]
-    implicit val entityDecoder: EntityDecoder[EnvTask, GetOptionResponse] =
-      circeEntityDecoder[EnvTask, GetOptionResponse]
+    implicit val entityDecoder: EntityDecoder[Task, GetOptionResponse] =
+      circeEntityDecoder[Task, GetOptionResponse]
   }
 
   final case class GetElectionResponse(
@@ -146,11 +144,11 @@ object Http {
 
   object GetElectionResponse {
     implicit val encoder: Encoder[GetElectionResponse] = deriveEncoder[GetElectionResponse]
-    implicit val entityEncoder: EntityEncoder[EnvTask, GetElectionResponse] =
-      circeEntityEncoder[EnvTask, GetElectionResponse]
+    implicit val entityEncoder: EntityEncoder[Task, GetElectionResponse] =
+      circeEntityEncoder[Task, GetElectionResponse]
     implicit val decoder: Decoder[GetElectionResponse] = deriveDecoder[GetElectionResponse]
-    implicit val entityDecoder: EntityDecoder[EnvTask, GetElectionResponse] =
-      circeEntityDecoder[EnvTask, GetElectionResponse]
+    implicit val entityDecoder: EntityDecoder[Task, GetElectionResponse] =
+      circeEntityDecoder[Task, GetElectionResponse]
 
   }
 
@@ -158,11 +156,11 @@ object Http {
 
   object GetVoterResponse {
     implicit val encoder: Encoder[GetVoterResponse] = deriveEncoder[GetVoterResponse]
-    implicit val entityEncoder: EntityEncoder[EnvTask, GetVoterResponse] =
-      circeEntityEncoder[EnvTask, GetVoterResponse]
+    implicit val entityEncoder: EntityEncoder[Task, GetVoterResponse] =
+      circeEntityEncoder[Task, GetVoterResponse]
     implicit val decoder: Decoder[GetVoterResponse] = deriveDecoder[GetVoterResponse]
-    implicit val entityDecoder: EntityDecoder[EnvTask, GetVoterResponse] =
-      circeEntityDecoder[EnvTask, GetVoterResponse]
+    implicit val entityDecoder: EntityDecoder[Task, GetVoterResponse] =
+      circeEntityDecoder[Task, GetVoterResponse]
   }
 
   final case class GetElectionAdminResponse(
@@ -177,28 +175,17 @@ object Http {
 
   object GetElectionAdminResponse {
     implicit val encoder: Encoder[GetElectionAdminResponse] = deriveEncoder[GetElectionAdminResponse]
-    implicit val entityEncoder: EntityEncoder[EnvTask, GetElectionAdminResponse] =
-      circeEntityEncoder[EnvTask, GetElectionAdminResponse]
+    implicit val entityEncoder: EntityEncoder[Task, GetElectionAdminResponse] =
+      circeEntityEncoder[Task, GetElectionAdminResponse]
     implicit val decoder: Decoder[GetElectionAdminResponse] = deriveDecoder[GetElectionAdminResponse]
-    implicit val entityDecoder: EntityDecoder[EnvTask, GetElectionAdminResponse] =
-      circeEntityDecoder[EnvTask, GetElectionAdminResponse]
+    implicit val entityDecoder: EntityDecoder[Task, GetElectionAdminResponse] =
+      circeEntityDecoder[Task, GetElectionAdminResponse]
 
   }
 
-  type Env = Random
-  type EnvTask[x] = RIO[Env, x]
+  def make(voting: Voting): Http = new Http(voting)
 
-  def make(config: Config.Http, voting: Voting): RManaged[Env, Server[EnvTask]] =
-    Managed.runtime.flatMap { implicit r: Runtime[Env] =>
-      import zio.interop.catz.implicits._
-
-      val http = new Http(voting)
-
-      BlazeServerBuilder[EnvTask](r.platform.executor.asEC)
-        .bindHttp(config.port, config.host)
-        .withHttpApp(http.httpApp)
-        .resource
-        .toManagedZIO
-    }
+  val layer: URLayer[Has[Voting], Has[Http]] =
+    ZLayer.fromService[Voting, Http](make)
 
 }
