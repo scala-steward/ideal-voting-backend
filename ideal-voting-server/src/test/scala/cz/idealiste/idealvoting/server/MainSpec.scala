@@ -2,34 +2,37 @@ package cz.idealiste.idealvoting.server
 
 import cats.implicits._
 import com.dimafeng.testcontainers.DockerComposeContainer
-import cz.idealiste.idealvoting
 import cz.idealiste.idealvoting.server.Http._
 import cz.idealiste.idealvoting.server.TestContainer.DockerCompose
-import org.http4s._
+import org.http4s
 import org.http4s.implicits._
+import org.http4s.{Method, Request, Uri}
 import zio._
 import zio.blocking.Blocking
 import zio.interop.catz._
+import zio.random.Random
 import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.TestEnvironment
 
 object MainSpec extends DefaultRunnableSpec {
 
-  private val makeApp: RManaged[Blocking with DockerCompose, HttpApp[EnvTask]] = for {
+  private val makeApp: RManaged[Blocking with DockerCompose with Random, http4s.HttpApp[Task]] = for {
     dc <- Managed.service[DockerComposeContainer]
     url = show"jdbc:mysql://${dc.getServiceHost("mariadb", 3306)}:${dc.getServicePort("mariadb", 3306)}/idealvoting"
-    db <- Db.make(Config.Db(url, "idealvoting", "idealvoting"))
-    voting = new Voting(Config.Voting(), db)
-    http = new idealvoting.server.Http(voting)
+    dbTransactor <- DbTransactor.make(Config.DbTransactor(url, "idealvoting", "idealvoting"))
+    db = Db.make(dbTransactor)
+    random <- Managed.access[Random](_.get)
+    voting = Voting.make(Config.Voting(), db, random)
+    http = Http.make(voting)
   } yield http.httpApp
 
   def spec: ZSpec[TestEnvironment, Failure] = {
     suite("Service")(
-      testM("/status should return OK") {
-        val response = makeApp.use(_.run(Request(method = Method.GET, uri = uri"/v1/status")))
-        assertM(response.map(_.status))(equalTo(Status.Ok))
-      },
+//      testM("/status should return OK") {
+//        val response = makeApp.use(_.run(Request(method = Method.GET, uri = uri"/v1/status")))
+//        assertM(response.map(_.status))(equalTo(Status.Ok))
+//      },
       testM("/election POST should create an election") {
         val request = CreateElectionRequest(
           "election 1",
