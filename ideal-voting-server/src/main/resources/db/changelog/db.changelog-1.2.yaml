@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: db.changelog-1.2
+      author: idealvoting
+      changes:
+        - createIndex:
+            clustered: false
+            columns:
+              - column:
+                  name: election_id
+              - column:
+                  name: option_id
+            indexName: idx_option_unique_electionid_optionid
+            tableName: option
+            unique: true
+        - createIndex:
+            clustered: false
+            columns:
+              - column:
+                  name: election_id
+              - column:
+                  name: email
+            indexName: idx_voter_unique_electionid_voter
+            tableName: voter
+            unique: true

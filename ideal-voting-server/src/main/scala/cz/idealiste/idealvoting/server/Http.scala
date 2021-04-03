@@ -84,11 +84,11 @@ object Http {
   final case class CreateOptionRequest(title: String, description: Option[String])
 
   object CreateOptionRequest {
-    implicit val decoder: Decoder[CreateOptionRequest] = deriveDecoder[CreateOptionRequest]
-    implicit val encoder: Encoder[CreateOptionRequest] = deriveEncoder[CreateOptionRequest]
-    implicit val entityDecoder: EntityDecoder[Task, CreateOptionRequest] =
+    implicit lazy val decoder: Decoder[CreateOptionRequest] = deriveDecoder[CreateOptionRequest]
+    implicit lazy val encoder: Encoder[CreateOptionRequest] = deriveEncoder[CreateOptionRequest]
+    implicit lazy val entityDecoder: EntityDecoder[Task, CreateOptionRequest] =
       circeEntityDecoder[Task, CreateOptionRequest]
-    implicit val entityEncoder: EntityEncoder[Task, CreateOptionRequest] =
+    implicit lazy val entityEncoder: EntityEncoder[Task, CreateOptionRequest] =
       circeEntityEncoder[Task, CreateOptionRequest]
   }
 
@@ -101,33 +101,33 @@ object Http {
   )
 
   object CreateElectionRequest {
-    implicit val decoder: Decoder[CreateElectionRequest] = deriveDecoder[CreateElectionRequest]
-    implicit val encoder: Encoder[CreateElectionRequest] = deriveEncoder[CreateElectionRequest]
-    implicit val entityDecoder: EntityDecoder[Task, CreateElectionRequest] =
+    implicit lazy val decoder: Decoder[CreateElectionRequest] = deriveDecoder[CreateElectionRequest]
+    implicit lazy val encoder: Encoder[CreateElectionRequest] = deriveEncoder[CreateElectionRequest]
+    implicit lazy val entityDecoder: EntityDecoder[Task, CreateElectionRequest] =
       circeEntityDecoder[Task, CreateElectionRequest]
-    implicit val entityEncoder: EntityEncoder[Task, CreateElectionRequest] =
+    implicit lazy val entityEncoder: EntityEncoder[Task, CreateElectionRequest] =
       circeEntityEncoder[Task, CreateElectionRequest]
   }
 
   final case class CreateElectionResponse(election: String)
 
   object CreateElectionResponse {
-    implicit val encoder: Encoder[CreateElectionResponse] = deriveEncoder[CreateElectionResponse]
-    implicit val entityEncoder: EntityEncoder[Task, CreateElectionResponse] =
+    implicit lazy val encoder: Encoder[CreateElectionResponse] = deriveEncoder[CreateElectionResponse]
+    implicit lazy val entityEncoder: EntityEncoder[Task, CreateElectionResponse] =
       circeEntityEncoder[Task, CreateElectionResponse]
-    implicit val decoder: Decoder[CreateElectionResponse] = deriveDecoder[CreateElectionResponse]
-    implicit val entityDecoder: EntityDecoder[Task, CreateElectionResponse] =
+    implicit lazy val decoder: Decoder[CreateElectionResponse] = deriveDecoder[CreateElectionResponse]
+    implicit lazy val entityDecoder: EntityDecoder[Task, CreateElectionResponse] =
       circeEntityDecoder[Task, CreateElectionResponse]
   }
 
   final case class GetOptionResponse(id: Int, title: String, description: Option[String])
 
   object GetOptionResponse {
-    implicit val encoder: Encoder[GetOptionResponse] = deriveEncoder[GetOptionResponse]
-    implicit val entityEncoder: EntityEncoder[Task, GetOptionResponse] =
+    implicit lazy val encoder: Encoder[GetOptionResponse] = deriveEncoder[GetOptionResponse]
+    implicit lazy val entityEncoder: EntityEncoder[Task, GetOptionResponse] =
       circeEntityEncoder[Task, GetOptionResponse]
-    implicit val decoder: Decoder[GetOptionResponse] = deriveDecoder[GetOptionResponse]
-    implicit val entityDecoder: EntityDecoder[Task, GetOptionResponse] =
+    implicit lazy val decoder: Decoder[GetOptionResponse] = deriveDecoder[GetOptionResponse]
+    implicit lazy val entityDecoder: EntityDecoder[Task, GetOptionResponse] =
       circeEntityDecoder[Task, GetOptionResponse]
   }
 
@@ -143,11 +143,11 @@ object Http {
   )
 
   object GetElectionResponse {
-    implicit val encoder: Encoder[GetElectionResponse] = deriveEncoder[GetElectionResponse]
-    implicit val entityEncoder: EntityEncoder[Task, GetElectionResponse] =
+    implicit lazy val encoder: Encoder[GetElectionResponse] = deriveEncoder[GetElectionResponse]
+    implicit lazy val entityEncoder: EntityEncoder[Task, GetElectionResponse] =
       circeEntityEncoder[Task, GetElectionResponse]
-    implicit val decoder: Decoder[GetElectionResponse] = deriveDecoder[GetElectionResponse]
-    implicit val entityDecoder: EntityDecoder[Task, GetElectionResponse] =
+    implicit lazy val decoder: Decoder[GetElectionResponse] = deriveDecoder[GetElectionResponse]
+    implicit lazy val entityDecoder: EntityDecoder[Task, GetElectionResponse] =
       circeEntityDecoder[Task, GetElectionResponse]
 
   }
@@ -155,11 +155,11 @@ object Http {
   final case class GetVoterResponse(voter: String, voted: Boolean)
 
   object GetVoterResponse {
-    implicit val encoder: Encoder[GetVoterResponse] = deriveEncoder[GetVoterResponse]
-    implicit val entityEncoder: EntityEncoder[Task, GetVoterResponse] =
+    implicit lazy val encoder: Encoder[GetVoterResponse] = deriveEncoder[GetVoterResponse]
+    implicit lazy val entityEncoder: EntityEncoder[Task, GetVoterResponse] =
       circeEntityEncoder[Task, GetVoterResponse]
-    implicit val decoder: Decoder[GetVoterResponse] = deriveDecoder[GetVoterResponse]
-    implicit val entityDecoder: EntityDecoder[Task, GetVoterResponse] =
+    implicit lazy val decoder: Decoder[GetVoterResponse] = deriveDecoder[GetVoterResponse]
+    implicit lazy val entityDecoder: EntityDecoder[Task, GetVoterResponse] =
       circeEntityDecoder[Task, GetVoterResponse]
   }
 
@@ -174,11 +174,11 @@ object Http {
   )
 
   object GetElectionAdminResponse {
-    implicit val encoder: Encoder[GetElectionAdminResponse] = deriveEncoder[GetElectionAdminResponse]
-    implicit val entityEncoder: EntityEncoder[Task, GetElectionAdminResponse] =
+    implicit lazy val encoder: Encoder[GetElectionAdminResponse] = deriveEncoder[GetElectionAdminResponse]
+    implicit lazy val entityEncoder: EntityEncoder[Task, GetElectionAdminResponse] =
       circeEntityEncoder[Task, GetElectionAdminResponse]
-    implicit val decoder: Decoder[GetElectionAdminResponse] = deriveDecoder[GetElectionAdminResponse]
-    implicit val entityDecoder: EntityDecoder[Task, GetElectionAdminResponse] =
+    implicit lazy val decoder: Decoder[GetElectionAdminResponse] = deriveDecoder[GetElectionAdminResponse]
+    implicit lazy val entityDecoder: EntityDecoder[Task, GetElectionAdminResponse] =
       circeEntityDecoder[Task, GetElectionAdminResponse]
 
   }

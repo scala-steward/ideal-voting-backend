@@ -1,7 +1,3 @@
-Global / onChangedBuildSource := ReloadOnSourceChanges
-ThisBuild / turbo := true
-ThisBuild / scalaVersion := "2.13.5"
-
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)
@@ -31,6 +27,8 @@ lazy val server = project
       Dependencies.snakeyaml,
       Dependencies.zio,
       Dependencies.zioCats,
+      Dependencies.zioConfig,
+      Dependencies.zioConfigMagnolia,
       // Test
       Dependencies.testcontainers % Test,
       Dependencies.zioTest % Test,
