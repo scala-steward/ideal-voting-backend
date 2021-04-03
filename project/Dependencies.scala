@@ -16,9 +16,13 @@ object Dependencies {
     val zio = "1.0.5"
     val zioCats = "2.4.0.0"
     val zioConfig = "1.0.2"
+    val zioMagic = "0.2.3"
 
     // Test
     val testcontainers = "0.39.3"
+
+    // Scalafix plugins
+    val zioMagicComments = "0.1.0"
   }
 
   val doobie = "org.tpolecat" %% "doobie-hikari" % Versions.doobie
@@ -36,9 +40,13 @@ object Dependencies {
   val zioCats = "dev.zio" %% "zio-interop-cats" % Versions.zioCats
   val zioConfig = "dev.zio" %% "zio-config-typesafe" % Versions.zioConfig
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % Versions.zioConfig
+  val zioMagic = "io.github.kitlangton" %% "zio-magic" % Versions.zioMagic
   val zioTest = "dev.zio" %% "zio-test" % Versions.zio
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio
 
   // Test
   val testcontainers = "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testcontainers
+
+  // Scalafix plugins
+  val zioMagicComments = "com.timushev" %% "zio-magic-comments" % Versions.zioMagicComments
 }

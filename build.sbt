@@ -29,6 +29,7 @@ lazy val server = project
       Dependencies.zioCats,
       Dependencies.zioConfig,
       Dependencies.zioConfigMagnolia,
+      Dependencies.zioMagic,
       // Test
       Dependencies.testcontainers % Test,
       Dependencies.zioTest % Test,
@@ -36,7 +37,7 @@ lazy val server = project
     ),
   )
 
-lazy val commonSettings: List[Def.Setting[_]] = List(
+lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings ++ List(
   organization := "cz.idealiste",
   homepage := Some(url("https://github.com/Idealiste-cz/ideal-voting-backend")),
   licenses := List("AGPLv3" -> url("https://www.gnu.org/licenses/agpl-3.0.en.html")),
@@ -47,6 +48,9 @@ lazy val commonSettings: List[Def.Setting[_]] = List(
       "ondra.pelech@gmail.com",
       url("https://github.com/sideeffffect"),
     ),
+  ),
+  ThisBuild / scalafixDependencies ++= List(
+    Dependencies.zioMagicComments,
   ),
   testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   missinglinkExcludedDependencies ++= List(
@@ -59,6 +63,6 @@ lazy val commonSettings: List[Def.Setting[_]] = List(
   // https://github.com/olafurpg/sbt-ci-release/issues/181
   sonatypeCredentialHost := "s01.oss.sonatype.org",
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
-) ++ DecentScala.decentScalaSettings
+)
 
 addCommandAlias("ci", "; check; +publishLocal")
