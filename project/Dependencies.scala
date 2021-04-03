@@ -15,6 +15,7 @@ object Dependencies {
     val snakeyaml = "1.28"
     val zio = "1.0.5"
     val zioCats = "2.4.0.0"
+    val zioConfig = "1.0.2"
 
     // Test
     val testcontainers = "0.39.3"
@@ -33,6 +34,8 @@ object Dependencies {
   val snakeyaml = "org.yaml" % "snakeyaml" % Versions.snakeyaml
   val zio = "dev.zio" %% "zio" % Versions.zio
   val zioCats = "dev.zio" %% "zio-interop-cats" % Versions.zioCats
+  val zioConfig = "dev.zio" %% "zio-config-typesafe" % Versions.zioConfig
+  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % Versions.zioConfig
   val zioTest = "dev.zio" %% "zio-test" % Versions.zio
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio
 

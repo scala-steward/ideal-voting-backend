@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: db.changelog-1.0
+      author: idealvoting
+      changes:
+        - createTable:
+            tableName: election
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+        - createTable:
+            tableName: admin
+            columns:
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: admin election id
+                    nullable: false
+                    unique: true
+        - createTable:
+            tableName: option
+            columns:
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: option election id
+                    nullable: false
+        - createTable:
+            tableName: voter
+            columns:
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: voter election id
+                    nullable: false
