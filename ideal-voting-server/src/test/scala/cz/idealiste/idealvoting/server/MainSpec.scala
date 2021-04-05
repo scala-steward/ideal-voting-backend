@@ -1,38 +1,26 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits._
-import com.dimafeng.testcontainers.DockerComposeContainer
 import cz.idealiste.idealvoting.server.Http._
-import cz.idealiste.idealvoting.server.TestContainer.DockerCompose
-import org.http4s
 import org.http4s.implicits._
-import org.http4s.{Method, Request, Uri}
+import org.http4s.{Method, Request, Status, Uri}
 import zio._
 import zio.blocking.Blocking
 import zio.interop.catz._
 import zio.random.Random
 import zio.test.Assertion._
+import zio.test.TestAspect._
 import zio.test._
 import zio.test.environment.TestEnvironment
 
 object MainSpec extends DefaultRunnableSpec {
 
-  private val makeApp: RManaged[Blocking with DockerCompose with Random, http4s.HttpApp[Task]] = for {
-    dc <- Managed.service[DockerComposeContainer]
-    url = show"jdbc:mysql://${dc.getServiceHost("mariadb", 3306)}:${dc.getServicePort("mariadb", 3306)}/idealvoting"
-    dbTransactor <- DbTransactor.make(Config.DbTransactor(url, "idealvoting", "idealvoting"))
-    db = Db.make(dbTransactor)
-    random <- Managed.access[Random](_.get)
-    voting = Voting.make(Config.Voting(), db, random)
-    http = Http.make(voting)
-  } yield http.httpApp
-
-  def spec: ZSpec[TestEnvironment, Failure] = {
+  def spec: ZSpec[TestEnvironment, Failure] =
     suite("Service")(
-//      testM("/status should return OK") {
-//        val response = makeApp.use(_.run(Request(method = Method.GET, uri = uri"/v1/status")))
-//        assertM(response.map(_.status))(equalTo(Status.Ok))
-//      },
+      testM("/status should return OK") {
+        val response =
+          ZIO.service[Http].flatMap(_.httpApp.run(Request(method = Method.GET, uri = uri"/v1/status")))
+        assertM(response.map(_.status))(equalTo(Status.Ok))
+      },
       testM("/election POST should create an election") {
         val request = CreateElectionRequest(
           "election 1",
@@ -41,7 +29,8 @@ object MainSpec extends DefaultRunnableSpec {
           List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", None)),
           List("voter1@x.com", "voter2@y.org"),
         )
-        val response = makeApp.use { httpApp =>
+        val response = ZIO.service[Http].flatMap { http =>
+          val httpApp = http.httpApp
           for {
             response <- httpApp.run(
               Request(method = Method.POST, uri = uri"/v1/election").withEntity(request),
@@ -84,6 +73,12 @@ object MainSpec extends DefaultRunnableSpec {
             ),
         )
       },
-    )
-  }.provideCustomLayer(TestContainer.dockerCompose)
+    ).provideSomeLayerShared[TestEnvironment](testLayer.orDie) @@ sequential
+
+  lazy val testLayer: RLayer[Blocking with Random, Has[Http]] = (
+    ZLayer.identity[Blocking] ++
+      ZLayer.identity[Random] ++ (
+        (Config.layer ++ (ZLayer.identity[Blocking] >>> TestContainer.dockerCompose)) >>> TestContainer.config
+      )
+  ) >>> Main.httpLayer
 }

@@ -4,8 +4,6 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
         with:
