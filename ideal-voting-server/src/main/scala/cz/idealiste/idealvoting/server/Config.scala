@@ -41,6 +41,6 @@ object Config {
   }
 
   implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
-  val layer: ULayer[Has[Config]] =
-    TypesafeConfig.fromDefaultLoader[Config](implicitly[ConfigDescriptor[Config]]).orDie
+  val layer: Layer[ReadError[String], Has[Config]] =
+    TypesafeConfig.fromDefaultLoader[Config](implicitly[ConfigDescriptor[Config]])
 }

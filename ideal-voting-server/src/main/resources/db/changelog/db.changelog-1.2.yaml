@@ -23,3 +23,23 @@ databaseChangeLog:
             indexName: idx_voter_unique_electionid_voter
             tableName: voter
             unique: true
+        - createIndex:
+            clustered: false
+            columns:
+              - column:
+                  name: vote_id
+              - column:
+                  name: order
+            indexName: idx_preference_unique_voteid_order
+            tableName: preference
+            unique: true
+        - createIndex:
+            clustered: false
+            columns:
+              - column:
+                  name: vote_id
+              - column:
+                  name: option_id
+            indexName: idx_preference_unique_voteid_optionid
+            tableName: preference
+            unique: true

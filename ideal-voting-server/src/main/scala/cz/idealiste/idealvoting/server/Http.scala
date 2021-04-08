@@ -31,13 +31,13 @@ class Http(voting: Voting) {
           createElection = CreateElection(
             req.title,
             req.description,
-            MailAddress.parseUnsafe(req.admin),
+            req.admin,
             req.options.map(req => CreateOption(req.title, req.description)),
-            req.voters.map(MailAddress.parseUnsafe),
+            req.voters,
           )
-          electionViewAdmin <- voting.createElection(createElection)
+          (titleMangled, token) <- voting.createElection(createElection)
           resp = CreateElectionResponse(
-            show"v1/election/admin/${electionViewAdmin.metadata.titleMangled}/${electionViewAdmin.admin.token}",
+            show"v1/election/admin/$titleMangled/$token",
           )
           resp <- Created(resp)
         } yield resp
@@ -48,9 +48,9 @@ class Http(voting: Voting) {
             electionView.metadata.title,
             electionView.metadata.titleMangled,
             electionView.metadata.description,
-            electionView.admin.email.displayString,
+            electionView.admin.email,
             electionView.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
-            electionView.voter.email.displayString,
+            electionView.voter.email,
             electionView.voter.token,
             electionView.voter.voted,
           )
@@ -63,10 +63,10 @@ class Http(voting: Voting) {
             electionViewAdmin.metadata.title,
             electionViewAdmin.metadata.titleMangled,
             electionViewAdmin.metadata.description,
-            electionViewAdmin.admin.email.displayString,
+            electionViewAdmin.admin.email,
             electionViewAdmin.admin.token,
             electionViewAdmin.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
-            electionViewAdmin.voters.map(v => GetVoterResponse(v.email.displayString, v.voted)),
+            electionViewAdmin.voters.map(v => GetVoterResponse(v.email, v.voted)),
           )
           resp <- Ok(resp)
         } yield resp
@@ -80,6 +80,18 @@ class Http(voting: Voting) {
 }
 
 object Http {
+
+  implicit lazy val emailDecoder: Decoder[MailAddress] = {
+    final case class MailAddressStructure(name: Option[String], address: String)
+    Decoder[String]
+      .emap(MailAddress.parse)
+      .or(deriveDecoder[MailAddressStructure].emap(s => MailAddress.parseAddressAndName(s.name, s.address)))
+  }
+  implicit lazy val emailEntityDecoder: EntityDecoder[Task, MailAddress] =
+    circeEntityDecoder[Task, MailAddress]
+  implicit lazy val emailEncoder: Encoder[MailAddress] = deriveEncoder[MailAddress]
+  implicit lazy val emailEntityEncoder: EntityEncoder[Task, MailAddress] =
+    circeEntityEncoder[Task, MailAddress]
 
   final case class CreateOptionRequest(title: String, description: Option[String])
 
@@ -95,9 +107,9 @@ object Http {
   final case class CreateElectionRequest(
       title: String,
       description: Option[String],
-      admin: String,
+      admin: MailAddress,
       options: List[CreateOptionRequest],
-      voters: List[String],
+      voters: List[MailAddress],
   )
 
   object CreateElectionRequest {
@@ -135,9 +147,9 @@ object Http {
       title: String,
       titleMangled: String,
       description: Option[String],
-      admin: String,
+      admin: MailAddress,
       options: List[GetOptionResponse],
-      voter: String,
+      voter: MailAddress,
       voterToken: String,
       voterVoted: Boolean,
   )
@@ -152,7 +164,7 @@ object Http {
 
   }
 
-  final case class GetVoterResponse(voter: String, voted: Boolean)
+  final case class GetVoterResponse(voter: MailAddress, voted: Boolean)
 
   object GetVoterResponse {
     implicit lazy val encoder: Encoder[GetVoterResponse] = deriveEncoder[GetVoterResponse]
@@ -167,7 +179,7 @@ object Http {
       title: String,
       titleMangled: String,
       description: Option[String],
-      admin: String,
+      admin: MailAddress,
       adminToken: String,
       options: List[GetOptionResponse],
       voters: List[GetVoterResponse],

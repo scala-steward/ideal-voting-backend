@@ -43,3 +43,29 @@ databaseChangeLog:
                     references: election (id)
                     foreignKeyName: voter election id
                     nullable: false
+        - createTable:
+            tableName: vote
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: votes election id
+                    nullable: false
+        - createTable:
+            tableName: preference
+            columns:
+              - column:
+                  name: vote_id
+                  type: int
+                  constraints:
+                    references: vote (id)
+                    foreignKeyName: preferences vote id
+                    nullable: false
