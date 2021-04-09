@@ -15,7 +15,7 @@ object Dependencies {
     val snakeyaml = "1.28"
     val zio = "1.0.5"
     val zioCats = "2.4.0.0"
-    val zioConfig = "1.0.2"
+    val zioConfig = "1.0.4"
     val zioMagic = "0.2.3"
 
     // Test
