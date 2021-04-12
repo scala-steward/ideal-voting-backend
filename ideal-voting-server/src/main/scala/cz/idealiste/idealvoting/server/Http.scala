@@ -1,6 +1,6 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits.showInterpolator
+import cats.implicits._
 import cz.idealiste.idealvoting.server.Http._
 import cz.idealiste.idealvoting.server.Voting._
 import emil.MailAddress
@@ -12,7 +12,7 @@ import org.http4s.circe.CirceEntityEncoder.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.{EntityDecoder, EntityEncoder, HttpApp, HttpRoutes}
+import org.http4s.{EntityDecoder, EntityEncoder, HttpApp, HttpRoutes, Method}
 import zio.interop.catz._
 import zio.{Has, Task, URLayer, ZLayer}
 
@@ -36,39 +36,79 @@ class Http(voting: Voting) {
             req.voters,
           )
           (titleMangled, token) <- voting.createElection(createElection)
-          resp = CreateElectionResponse(
-            show"v1/election/admin/$titleMangled/$token",
+          resp = LinksResponse(
+            List(
+              Link(show"v1/election/admin/$titleMangled/$token", "election-view-admin", GET),
+            ),
           )
           resp <- Created(resp)
         } yield resp
       case GET -> Root / "election" / _ / token =>
         for {
           electionView <- voting.viewElection(token)
-          resp = GetElectionResponse(
-            electionView.metadata.title,
-            electionView.metadata.titleMangled,
-            electionView.metadata.description,
-            electionView.admin.email,
-            electionView.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
-            electionView.voter.email,
-            electionView.voter.token,
-            electionView.voter.voted,
-          )
-          resp <- Ok(resp)
+          resp = electionView.map { electionView =>
+            val titleMangled = electionView.metadata.titleMangled
+            GetElectionResponse(
+              electionView.metadata.title,
+              electionView.metadata.titleMangled,
+              electionView.metadata.description,
+              electionView.admin.email,
+              electionView.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
+              electionView.voter.email,
+              electionView.voter.token,
+              List(Link(show"v1/election/$titleMangled/$token", "self", GET)) ++ (
+                if (electionView.voter.voted) List()
+                else
+                  List(
+                    Link(show"v1/election/$titleMangled/$token", "cast-vote", POST),
+                  )
+              ),
+            )
+          }
+          resp <- resp match {
+            case Some(resp) => Ok(resp)
+            case None       => NotFound()
+          }
+        } yield resp
+      case req @ POST -> Root / "election" / titleMangled / token =>
+        for {
+          req <- req.as[CastVoteRequest]
+          result <- voting.castVote(token, req.preferences)
+          resp <- result match {
+            case invalidVote: InvalidVote       => BadRequest(invalidVote.message)
+            case VoteInsertResult.AlreadyVoted  => Conflict()
+            case VoteInsertResult.TokenNotFound => NotFound()
+            case VoteInsertResult.SuccessfullyVoted =>
+              val resp = LinksResponse(
+                List(
+                  Link(show"v1/election/$titleMangled/$token", "election-view", GET),
+                ),
+              )
+              Accepted(resp)
+          }
         } yield resp
       case GET -> Root / "election" / "admin" / _ / token =>
         for {
           electionViewAdmin <- voting.viewElectionAdmin(token)
-          resp = GetElectionAdminResponse(
-            electionViewAdmin.metadata.title,
-            electionViewAdmin.metadata.titleMangled,
-            electionViewAdmin.metadata.description,
-            electionViewAdmin.admin.email,
-            electionViewAdmin.admin.token,
-            electionViewAdmin.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
-            electionViewAdmin.voters.map(v => GetVoterResponse(v.email, v.voted)),
-          )
-          resp <- Ok(resp)
+          resp = electionViewAdmin.map { electionViewAdmin =>
+            val titleMangled = electionViewAdmin.metadata.titleMangled
+            GetElectionAdminResponse(
+              electionViewAdmin.metadata.title,
+              titleMangled,
+              electionViewAdmin.metadata.description,
+              electionViewAdmin.admin.email,
+              electionViewAdmin.admin.token,
+              electionViewAdmin.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
+              electionViewAdmin.voters.map(v => GetVoterResponse(v.email, v.voted)),
+              List(
+                Link(show"v1/election/admin/$titleMangled/$token", "election-view-admin", GET),
+              ),
+            )
+          }
+          resp <- resp match {
+            case Some(resp) => Ok(resp)
+            case None       => NotFound()
+          }
         } yield resp
 
     }
@@ -92,6 +132,25 @@ object Http {
   implicit lazy val emailEncoder: Encoder[MailAddress] = deriveEncoder[MailAddress]
   implicit lazy val emailEntityEncoder: EntityEncoder[Task, MailAddress] =
     circeEntityEncoder[Task, MailAddress]
+
+  implicit lazy val methodDecoder: Decoder[Method] =
+    Decoder[String].emap(Method.fromString(_).leftMap(_.sanitized))
+  implicit lazy val methodEntityDecoder: EntityDecoder[Task, Method] =
+    circeEntityDecoder[Task, Method]
+  implicit lazy val methodEncoder: Encoder[Method] = Encoder[String].contramap(_.name)
+  implicit lazy val methodEntityEncoder: EntityEncoder[Task, Method] =
+    circeEntityEncoder[Task, Method]
+
+  final case class Link(href: String, rel: String, method: Method)
+
+  object Link {
+    implicit lazy val decoder: Decoder[Link] = deriveDecoder[Link]
+    implicit lazy val encoder: Encoder[Link] = deriveEncoder[Link]
+    implicit lazy val entityDecoder: EntityDecoder[Task, Link] =
+      circeEntityDecoder[Task, Link]
+    implicit lazy val entityEncoder: EntityEncoder[Task, Link] =
+      circeEntityEncoder[Task, Link]
+  }
 
   final case class CreateOptionRequest(title: String, description: Option[String])
 
@@ -121,15 +180,15 @@ object Http {
       circeEntityEncoder[Task, CreateElectionRequest]
   }
 
-  final case class CreateElectionResponse(election: String)
+  final case class LinksResponse(links: List[Link])
 
-  object CreateElectionResponse {
-    implicit lazy val encoder: Encoder[CreateElectionResponse] = deriveEncoder[CreateElectionResponse]
-    implicit lazy val entityEncoder: EntityEncoder[Task, CreateElectionResponse] =
-      circeEntityEncoder[Task, CreateElectionResponse]
-    implicit lazy val decoder: Decoder[CreateElectionResponse] = deriveDecoder[CreateElectionResponse]
-    implicit lazy val entityDecoder: EntityDecoder[Task, CreateElectionResponse] =
-      circeEntityDecoder[Task, CreateElectionResponse]
+  object LinksResponse {
+    implicit lazy val encoder: Encoder[LinksResponse] = deriveEncoder[LinksResponse]
+    implicit lazy val entityEncoder: EntityEncoder[Task, LinksResponse] =
+      circeEntityEncoder[Task, LinksResponse]
+    implicit lazy val decoder: Decoder[LinksResponse] = deriveDecoder[LinksResponse]
+    implicit lazy val entityDecoder: EntityDecoder[Task, LinksResponse] =
+      circeEntityDecoder[Task, LinksResponse]
   }
 
   final case class GetOptionResponse(id: Int, title: String, description: Option[String])
@@ -151,7 +210,7 @@ object Http {
       options: List[GetOptionResponse],
       voter: MailAddress,
       voterToken: String,
-      voterVoted: Boolean,
+      links: List[Link],
   )
 
   object GetElectionResponse {
@@ -183,6 +242,7 @@ object Http {
       adminToken: String,
       options: List[GetOptionResponse],
       voters: List[GetVoterResponse],
+      links: List[Link],
   )
 
   object GetElectionAdminResponse {
@@ -193,6 +253,17 @@ object Http {
     implicit lazy val entityDecoder: EntityDecoder[Task, GetElectionAdminResponse] =
       circeEntityDecoder[Task, GetElectionAdminResponse]
 
+  }
+
+  final case class CastVoteRequest(preferences: List[Int])
+
+  object CastVoteRequest {
+    implicit lazy val encoder: Encoder[CastVoteRequest] = deriveEncoder[CastVoteRequest]
+    implicit lazy val entityEncoder: EntityEncoder[Task, CastVoteRequest] =
+      circeEntityEncoder[Task, CastVoteRequest]
+    implicit lazy val decoder: Decoder[CastVoteRequest] = deriveDecoder[CastVoteRequest]
+    implicit lazy val entityDecoder: EntityDecoder[Task, CastVoteRequest] =
+      circeEntityDecoder[Task, CastVoteRequest]
   }
 
   def make(voting: Voting): Http = new Http(voting)

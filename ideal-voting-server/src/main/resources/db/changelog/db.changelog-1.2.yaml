@@ -29,8 +29,8 @@ databaseChangeLog:
               - column:
                   name: vote_id
               - column:
-                  name: order
-            indexName: idx_preference_unique_voteid_order
+                  name: ordering
+            indexName: idx_preference_unique_voteid_ordering
             tableName: preference
             unique: true
         - createIndex:

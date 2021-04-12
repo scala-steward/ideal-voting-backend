@@ -1,5 +1,6 @@
 package cz.idealiste.idealvoting.server
 
+import cats.implicits._
 import cz.idealiste.idealvoting.server.Http._
 import emil.MailAddress
 import emil.javamail.syntax._
@@ -34,7 +35,7 @@ object MainSpec extends DefaultRunnableSpec {
           "election 1",
           None,
           email("Admin 1 <admin1@a.net>"),
-          List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", None)),
+          List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", Some("Option 2"))),
           List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
         )
         val response = ZIO.service[Http].flatMap { http =>
@@ -43,9 +44,17 @@ object MainSpec extends DefaultRunnableSpec {
             response <- httpApp.run(
               Request(method = Method.POST, uri = uri"/v1/election").withEntity(request),
             )
-            response <- response.as[CreateElectionResponse]
+            response <- response.as[LinksResponse]
             response <- httpApp.run(
-              Request(method = Method.GET, uri = Uri.unsafeFromString(response.election)),
+              Request(
+                method = Method.GET,
+                uri = Uri.unsafeFromString(
+                  response.links
+                    .find(l => l.method === Method.GET && l.rel === "election-view-admin")
+                    .get
+                    .href,
+                ),
+              ),
             )
             response <- response.as[GetElectionAdminResponse]
           } yield response
@@ -75,7 +84,9 @@ object MainSpec extends DefaultRunnableSpec {
             hasField(
               "options",
               (r: GetElectionAdminResponse) => r.options,
-              equalTo(List(GetOptionResponse(0, "option1", None), GetOptionResponse(1, "option2", None))),
+              equalTo(
+                List(GetOptionResponse(0, "option1", None), GetOptionResponse(1, "option2", Some("Option 2"))),
+              ),
             ) &&
             hasField(
               "voters",
@@ -87,6 +98,59 @@ object MainSpec extends DefaultRunnableSpec {
                 ),
               ),
             ),
+        )
+      },
+      testM("/election/.../<token> POST should cast a vote") {
+        val requestCreate = CreateElectionRequest(
+          "election 2",
+          None,
+          email("Admin 1 <admin1@a.net>"),
+          List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", None)),
+          List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
+        )
+        val requestCast = CastVoteRequest(List(1, 0))
+        val responseViewAdmin = ZIO.service[Http].flatMap { http =>
+          val httpApp = http.httpApp
+          for {
+            responseCreate <- httpApp
+              .run(
+                Request(method = Method.POST, uri = uri"/v1/election").withEntity(requestCreate),
+              )
+              .flatMap(_.as[LinksResponse])
+            _ <- httpApp
+              .run(
+                Request(
+                  method = Method.POST,
+                  uri = Uri.unsafeFromString("/v1/election/uri-mangled-xyz/tvehbtrszd"),
+                ).withEntity(requestCast),
+              )
+              .flatMap(_.as[LinksResponse])
+            responseViewAdmin <- httpApp
+              .run(
+                Request(
+                  method = Method.GET,
+                  uri = Uri.unsafeFromString(
+                    responseCreate.links
+                      .find(l => l.method === Method.GET && l.rel === "election-view-admin")
+                      .get
+                      .href,
+                  ),
+                ),
+              )
+              .flatMap(_.as[GetElectionAdminResponse])
+          } yield responseViewAdmin
+        }
+        assertM(responseViewAdmin)(
+          hasField(
+            "voters",
+            (r: GetElectionAdminResponse) => r.voters.map(r => (r.voter.name, r.voter.address, r.voted)),
+            equalTo(
+              List(
+                (Some("Voter 1"), "voter1@x.com", true),
+                (None, "voter2@y.org", false),
+              ),
+            ),
+          ),
         )
       },
     ).provideSomeLayerShared[Blocking with Random](testLayer.orDie) @@ sequential

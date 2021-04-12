@@ -49,6 +49,7 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
       url("https://github.com/sideeffffect"),
     ),
   ),
+  crossScalaVersions := List(DecentScala.decentScalaVersion213),
   ThisBuild / scalafixDependencies ++= List(
     Dependencies.zioMagicComments,
   ),

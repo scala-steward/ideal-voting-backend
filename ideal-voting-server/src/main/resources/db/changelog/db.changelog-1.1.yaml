@@ -86,7 +86,7 @@ databaseChangeLog:
             tableName: preference
             columns:
               - column:
-                  name: order
+                  name: ordering
                   type: int
                   constraints:
                     nullable: false
