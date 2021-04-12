@@ -2,7 +2,7 @@
 
 [![Build Status][Badge-GitHubActions]][Link-GitHubActions]
 
-Backend for IDEALvoting.
+Backend for IDEALvoting
 
 To start the server:
 ```
