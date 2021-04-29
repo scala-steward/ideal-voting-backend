@@ -1,7 +1,7 @@
 version: '2'
 services:
   mariadb:
-    image: "mariadb:10.5.9"
+    image: "mariadb:10.6.0"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: random
       MYSQL_DATABASE: idealvoting
