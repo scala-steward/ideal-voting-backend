@@ -1,6 +1,7 @@
 package cz.idealiste.idealvoting.server
 
 import cats.implicits._
+import com.dimafeng.testcontainers.DockerComposeContainer
 import cz.idealiste.idealvoting.server.Http._
 import emil.MailAddress
 import emil.javamail.syntax._
@@ -11,6 +12,7 @@ import zio._
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.interop.catz._
+import zio.magic._
 import zio.random.Random
 import zio.test.Assertion._
 import zio.test.TestAspect._
@@ -155,11 +157,17 @@ object MainSpec extends DefaultRunnableSpec {
       },
     ).provideSomeLayerShared[Blocking with Random](testLayer.orDie) @@ sequential
 
-  lazy val testLayer: RLayer[Blocking with Random, Has[Http]] = (
-    ZLayer.identity[Blocking] ++
-      Clock.live ++
-      ZLayer.identity[Random] ++ (
-        (Config.layer ++ (ZLayer.identity[Blocking] >>> TestContainer.dockerCompose)) >>> TestContainer.config
-      )
-  ) >>> Main.httpLayer
+  lazy val testLayerConfig: RLayer[Blocking, Has[Config]] =
+    ZLayer.fromSomeMagic[Blocking, Has[Config] with Has[DockerComposeContainer]](
+      Config.layer,
+      TestContainer.dockerCompose,
+    ) >>> TestContainer.config
+
+  lazy val testLayer: RLayer[Blocking with Random, Has[Http]] =
+    ZLayer.fromSomeMagic[Blocking with Random, Has[Http]](
+      Clock.live,
+      testLayerConfig,
+      Main.httpLayer,
+    )
+
 }

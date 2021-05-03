@@ -44,6 +44,6 @@ object DbTransactor {
   }
 
   val layer: RLayer[Blocking with Has[Config.DbTransactor], Has[Transactor[Task]]] =
-    ZLayer.fromServiceManaged[Config.DbTransactor, Blocking, Throwable, Transactor[Task]](make)
+    ZManaged.service[Config.DbTransactor].flatMap(make).toLayer
 
 }

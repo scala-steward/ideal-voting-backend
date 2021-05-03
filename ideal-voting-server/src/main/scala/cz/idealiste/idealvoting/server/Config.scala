@@ -22,21 +22,21 @@ object Config {
   )
   object DbTransactor {
     val layer: RLayer[Has[Config], Has[DbTransactor]] =
-      ZLayer.fromService[Config, DbTransactor](_.dbTransactor)
+      ZIO.service[Config].map(_.dbTransactor).toLayer
     implicit lazy val configDescriptor: ConfigDescriptor[DbTransactor] =
       DeriveConfigDescriptor.descriptor[DbTransactor]
   }
 
   final case class HttpServer(host: String, port: Int)
   object HttpServer {
-    val layer: RLayer[Has[Config], Has[HttpServer]] = ZLayer.fromService[Config, HttpServer](_.httpServer)
+    val layer: RLayer[Has[Config], Has[HttpServer]] = ZIO.service[Config].map(_.httpServer).toLayer
     implicit lazy val configDescriptor: ConfigDescriptor[HttpServer] =
       DeriveConfigDescriptor.descriptor[HttpServer]
   }
 
   final case class Voting(tokenLength: Int = 10)
   object Voting {
-    val layer: RLayer[Has[Config], Has[Voting]] = ZLayer.fromService[Config, Voting](_.voting)
+    val layer: RLayer[Has[Config], Has[Voting]] = ZIO.service[Config].map(_.voting).toLayer
     implicit lazy val configDescriptor: ConfigDescriptor[Voting] = DeriveConfigDescriptor.descriptor[Voting]
   }
 

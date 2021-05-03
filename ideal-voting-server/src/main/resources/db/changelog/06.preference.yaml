@@ -1,28 +1,39 @@
 databaseChangeLog:
   - changeSet:
-      id: db.changelog-1.2
+      id: preference-01
       author: idealvoting
       changes:
-        - createIndex:
-            clustered: false
+        - createTable:
+            tableName: preference
             columns:
               - column:
-                  name: election_id
+                  name: vote_id
+                  type: int
+                  constraints:
+                    references: vote (id)
+                    foreignKeyName: preferences vote id
+                    nullable: false
+  - changeSet:
+      id: preference-02
+      author: idealvoting
+      changes:
+        - addColumn:
+            tableName: preference
+            columns:
+              - column:
+                  name: ordering
+                  type: int
+                  constraints:
+                    nullable: false
               - column:
                   name: option_id
-            indexName: idx_option_unique_electionid_optionid
-            tableName: option
-            unique: true
-        - createIndex:
-            clustered: false
-            columns:
-              - column:
-                  name: election_id
-              - column:
-                  name: email
-            indexName: idx_voter_unique_electionid_voter
-            tableName: voter
-            unique: true
+                  type: int
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: preference-03
+      author: idealvoting
+      changes:
         - createIndex:
             clustered: false
             columns:
