@@ -4,6 +4,7 @@ import zio._
 import zio.config._
 import zio.config.magnolia.DeriveConfigDescriptor
 import zio.config.typesafe._
+import zio.system.System
 
 final case class Config(
     dbTransactor: Config.DbTransactor,
@@ -41,6 +42,13 @@ object Config {
   }
 
   implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
-  val layer: Layer[ReadError[String], Has[Config]] =
-    TypesafeConfig.fromDefaultLoader[Config](implicitly[ConfigDescriptor[Config]])
+  def layer(args: List[String]): URLayer[System, Has[Config]] = (
+    for {
+      typesafe <- ZIO.fromEither(TypesafeConfigSource.unsafeDefaultLoader)
+      env <- ConfigSource.fromSystemEnv
+      cmd = ConfigSource.fromCommandLineArgs(args)
+      source = cmd <> env <> typesafe
+      config <- ZIO.fromEither(read(implicitly[ConfigDescriptor[Config]].from(source)))
+    } yield config
+  ).orDie.toLayer
 }

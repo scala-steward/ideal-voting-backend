@@ -14,6 +14,7 @@ import zio.clock.Clock
 import zio.interop.catz._
 import zio.magic._
 import zio.random.Random
+import zio.system.System
 import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test._
@@ -155,16 +156,16 @@ object MainSpec extends DefaultRunnableSpec {
           ),
         )
       },
-    ).provideSomeLayerShared[Blocking with Random](testLayer.orDie) @@ sequential
+    ).provideSomeLayerShared[Blocking with Random with System](testLayer.orDie) @@ sequential
 
-  lazy val testLayerConfig: RLayer[Blocking, Has[Config]] =
-    ZLayer.fromSomeMagic[Blocking, Has[Config] with Has[DockerComposeContainer]](
-      Config.layer,
+  lazy val testLayerConfig: RLayer[Blocking with System, Has[Config]] =
+    ZLayer.fromSomeMagic[Blocking with System, Has[Config] with Has[DockerComposeContainer]](
+      Config.layer(List()),
       TestContainer.dockerCompose,
     ) >>> TestContainer.config
 
-  lazy val testLayer: RLayer[Blocking with Random, Has[Http]] =
-    ZLayer.fromSomeMagic[Blocking with Random, Has[Http]](
+  lazy val testLayer: RLayer[Blocking with Random with System, Has[Http]] =
+    ZLayer.fromSomeMagic[Blocking with Random with System, Has[Http]](
       Clock.live,
       testLayerConfig,
       Main.httpLayer,
