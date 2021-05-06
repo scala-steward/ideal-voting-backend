@@ -19,7 +19,7 @@ object Dependencies {
     val zioMagic = "0.3.0"
 
     // Test
-    val testcontainers = "0.39.3"
+    val zioTestcontainers = "0.2.0"
 
     // Scalafix plugins
     val zioMagicComments = "0.1.0"
@@ -45,7 +45,7 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio
 
   // Test
-  val testcontainers = "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testcontainers
+  val zioTestcontainers = "com.github.sideeffffect" %% "zio-testcontainers" % Versions.zioTestcontainers
 
   // Scalafix plugins
   val zioMagicComments = "com.timushev" %% "zio-magic-comments" % Versions.zioMagicComments

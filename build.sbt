@@ -31,8 +31,8 @@ lazy val server = project
       Dependencies.zioConfigMagnolia,
       Dependencies.zioMagic,
       // Test
-      Dependencies.testcontainers % Test,
       Dependencies.zioTest % Test,
+      Dependencies.zioTestcontainers % Test,
       Dependencies.zioTestSbt % Test,
     ),
   )
