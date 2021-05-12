@@ -11,7 +11,7 @@ object Dependencies {
     val http4s = "0.21.22"
     val liquibase = "4.3.5"
     val logback = "1.2.3"
-    val mariadb = "2.7.2"
+    val mariadb = "2.7.3"
     val snakeyaml = "1.28"
     val zio = "1.0.7"
     val zioCats = "2.4.1.0"
