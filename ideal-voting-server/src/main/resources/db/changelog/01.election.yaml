@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: election-01
+      author: idealvoting
+      changes:
+        - createTable:
+            tableName: election
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+  - changeSet:
+      id: election-02
+      author: idealvoting
+      changes:
+        - addColumn:
+            tableName: election
+            columns:
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title_mangled
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
+              - column:
+                  name: started
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ended
+                  type: timestamp with time zone
+        - modifySql:
+            dbms: mariadb,mysql # mariadb doesn't have `timestamp with time zone`
+            replace:
+              - replace: timestamp with time zone
+              - with: timestamp

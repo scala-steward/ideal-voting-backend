@@ -18,6 +18,12 @@ object HttpServer {
         .toManagedZIO
     }
 
-  val layer: RLayer[Has[Config.HttpServer] with Has[Http], Has[Server[Task]]] =
-    ZLayer.fromServicesManaged[Config.HttpServer, Http, Any, Throwable, Server[Task]](make)
+  val layer: RLayer[Has[Config.HttpServer] with Has[Http], Has[Server[Task]]] = (
+    for {
+      config <- ZManaged.service[Config.HttpServer]
+      http <- ZManaged.service[Http]
+      result <- make(config, http)
+    } yield result
+  ).toLayer
+
 }

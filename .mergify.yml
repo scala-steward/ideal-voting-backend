@@ -19,7 +19,7 @@ pull_request_rules:
       - base=master
       - author=scala-steward
       - status-success=ci
-      - "body~=(labels: library-update, semver-minor)|(labels: library-update, semver-patch)|(labels: sbt-plugin-update, semver-minor)|(labels: sbt-plugin-update, semver-patch)|(labels: scalafix-rule-update)|(labels: test-library-update)"
+      - "body~=(labels: library-update, semver-minor)|(labels: library-update, semver-patch)|(labels: sbt-plugin-update, semver-minor)|(labels: sbt-plugin-update, semver-patch)|(labels: sbt-plugin-update, semver-build-metadata)|(labels: scalafix-rule-update)|(labels: test-library-update)"
     actions:
       merge:
         method: squash

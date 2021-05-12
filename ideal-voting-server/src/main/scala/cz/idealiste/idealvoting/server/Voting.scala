@@ -168,5 +168,5 @@ object Voting {
     Has[Config.Voting] with Has[Db] with Has[Random.Service] with Has[Clock.Service],
     Has[Voting],
   ] =
-    ZLayer.fromServices[Config.Voting, Db, Random.Service, Clock.Service, Voting](make)
+    (make _).toLayer
 }

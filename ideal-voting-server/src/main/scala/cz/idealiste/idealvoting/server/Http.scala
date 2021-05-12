@@ -13,8 +13,8 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.{EntityDecoder, EntityEncoder, HttpApp, HttpRoutes, Method}
+import zio._
 import zio.interop.catz._
-import zio.{Has, Task, URLayer, ZLayer}
 
 class Http(voting: Voting) {
 
@@ -269,6 +269,6 @@ object Http {
   def make(voting: Voting): Http = new Http(voting)
 
   val layer: URLayer[Has[Voting], Has[Http]] =
-    ZLayer.fromService[Voting, Http](make)
+    (make _).toLayer
 
 }

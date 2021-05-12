@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: admin-01
+      author: idealvoting
+      changes:
+        - createTable:
+            tableName: admin
+            columns:
+              - column:
+                  name: election_id
+                  type: int
+                  constraints:
+                    references: election (id)
+                    foreignKeyName: admin election id
+                    nullable: false
+                    unique: true
+  - changeSet:
+      id: admin-02
+      author: idealvoting
+      changes:
+        - addColumn:
+            tableName: admin
+            columns:
+              - column:
+                  name: name
+                  type: varchar(255)
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true

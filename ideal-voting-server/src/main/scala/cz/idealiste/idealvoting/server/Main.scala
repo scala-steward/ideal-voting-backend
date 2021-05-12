@@ -6,15 +6,18 @@ import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.magic._
 import zio.random.Random
+import zio.system.System
 
 object Main extends App {
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    serverLayer.build.useForever.exitCode
+    serverLayer(args).build.useForever.exitCode
 
-  lazy val serverLayer: RLayer[Blocking with Clock with Random, Has[Server[Task]]] =
-    ZLayer.fromSomeMagic[Blocking with Clock with Random, Has[Server[Task]]](
-      Config.layer,
+  def serverLayer(
+      args: List[String],
+  ): RLayer[Blocking with Clock with Random with System, Has[Server[Task]]] =
+    ZLayer.fromSomeMagic[Blocking with Clock with Random with System, Has[Server[Task]]](
+      Config.layer(args),
       httpLayer,
       Config.HttpServer.layer,
       HttpServer.layer,

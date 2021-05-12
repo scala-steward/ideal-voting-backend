@@ -4,22 +4,22 @@ object Dependencies {
 
   object Versions {
 
-    val doobie = "0.13.0"
+    val doobie = "0.13.2"
     val circe = "0.13.0"
     val commonsLang = "3.12.0"
-    val emil = "0.9.1"
+    val emil = "0.9.2"
     val http4s = "0.21.22"
-    val liquibase = "4.3.4"
+    val liquibase = "4.3.5"
     val logback = "1.2.3"
     val mariadb = "2.7.2"
     val snakeyaml = "1.28"
     val zio = "1.0.7"
-    val zioCats = "3.0.2.0"
-    val zioConfig = "1.0.4"
-    val zioMagic = "0.2.5"
+    val zioCats = "2.4.1.0"
+    val zioConfig = "1.0.5"
+    val zioMagic = "0.3.2"
 
     // Test
-    val testcontainers = "0.39.3"
+    val zioTestcontainers = "0.2.0"
 
     // Scalafix plugins
     val zioMagicComments = "0.1.0"
@@ -45,7 +45,7 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio
 
   // Test
-  val testcontainers = "com.dimafeng" %% "testcontainers-scala-postgresql" % Versions.testcontainers
+  val zioTestcontainers = "com.github.sideeffffect" %% "zio-testcontainers" % Versions.zioTestcontainers
 
   // Scalafix plugins
   val zioMagicComments = "com.timushev" %% "zio-magic-comments" % Versions.zioMagicComments

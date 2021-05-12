@@ -13,8 +13,6 @@ import zio.interop.catz._
 
 class Db(transactor: Transactor[Task]) {
 
-  private implicit val han: LogHandler = LogHandler.jdkLogHandler
-
   private implicit lazy val mailAddressRead: Read[MailAddress] = mailAddressMulicolumnRead
   private implicit lazy val mailAddressWrite: Write[MailAddress] = mailAddressMulicolumnWrite
 
@@ -161,6 +159,6 @@ object Db {
   def make(transactor: Transactor[Task]): Db = new Db(transactor)
 
   val layer: URLayer[Has[Transactor[Task]], Has[Db]] =
-    ZLayer.fromService[Transactor[Task], Db](new Db(_))
+    (make _).toLayer
 
 }
