@@ -4,17 +4,17 @@ object Dependencies {
 
   object Versions {
 
-    val doobie = "0.13.2"
+    val doobie = "0.13.3"
     val circe = "0.13.0"
     val commonsLang = "3.12.0"
     val emil = "0.9.2"
-    val http4s = "0.21.22"
+    val http4s = "0.21.23"
     val liquibase = "4.3.5"
     val logback = "1.2.3"
-    val mariadb = "2.7.2"
+    val mariadb = "2.7.3"
     val snakeyaml = "1.28"
-    val zio = "1.0.7"
-    val zioCats = "3.0.2.0"
+    val zio = "1.0.8"
+    val zioCats = "2.4.1.0"
     val zioConfig = "1.0.5"
     val zioMagic = "0.3.2"
 
