@@ -4,28 +4,19 @@ import zio._
 import zio.config._
 import zio.config.magnolia.DeriveConfigDescriptor
 import zio.config.typesafe._
+import zio.doobie.liquibase._
 import zio.system.System
 
 final case class Config(
-    dbTransactor: Config.DbTransactor,
+    dbTransactor: ZIODoobieLiquibase.Config,
     httpServer: Config.HttpServer,
     voting: Config.Voting,
 )
 
 object Config {
-  final case class DbTransactor(
-      url: String,
-      user: String,
-      password: String,
-      driverClassName: String = "org.mariadb.jdbc.Driver",
-      changeLogFile: String = "db/changelog/db.changelog-master.yaml",
-      threadPoolSize: Int = 32,
-  )
   object DbTransactor {
-    val layer: RLayer[Has[Config], Has[DbTransactor]] =
+    val layer: RLayer[Has[Config], Has[ZIODoobieLiquibase.Config]] =
       ZIO.service[Config].map(_.dbTransactor).toLayer
-    implicit lazy val configDescriptor: ConfigDescriptor[DbTransactor] =
-      DeriveConfigDescriptor.descriptor[DbTransactor]
   }
 
   final case class HttpServer(host: String, port: Int)
@@ -44,7 +35,7 @@ object Config {
   implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
   def layer(args: List[String]): URLayer[System, Has[Config]] = (
     for {
-      typesafe <- ZIO.fromEither(TypesafeConfigSource.unsafeDefaultLoader)
+      typesafe <- TypesafeConfigSource.fromDefaultLoader
       env <- ConfigSource.fromSystemEnv
       cmd = ConfigSource.fromCommandLineArgs(args)
       source = cmd <> env <> typesafe

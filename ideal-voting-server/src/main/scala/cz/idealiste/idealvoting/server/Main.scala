@@ -4,6 +4,7 @@ import org.http4s.server._
 import zio._
 import zio.blocking.Blocking
 import zio.clock.Clock
+import zio.doobie.liquibase.ZIODoobieLiquibase
 import zio.magic._
 import zio.random.Random
 import zio.system.System
@@ -26,7 +27,7 @@ object Main extends App {
   lazy val httpLayer: RLayer[Blocking with Clock with Random with Has[Config], Has[Http]] =
     ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config], Has[Http]](
       Config.DbTransactor.layer,
-      DbTransactor.layer,
+      ZIODoobieLiquibase.layer,
       Db.layer,
       Config.Voting.layer,
       Voting.layer,

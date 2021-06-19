@@ -162,7 +162,7 @@ object MainSpec extends DefaultRunnableSpec {
     ZLayer.fromSomeMagic[Blocking with System, Has[Config] with Has[DockerComposeContainer]](
       Config.layer(List()),
       TestContainer.dockerCompose,
-    ) >>> TestContainer.config
+    ) >>> TestContainer.layer
 
   lazy val testLayer: RLayer[Blocking with Random with System, Has[Http]] =
     ZLayer.fromSomeMagic[Blocking with Random with System, Has[Http]](

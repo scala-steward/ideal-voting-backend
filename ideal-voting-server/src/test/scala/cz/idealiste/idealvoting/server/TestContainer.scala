@@ -21,16 +21,22 @@ object TestContainer {
       ),
     ).toLayer
 
-  lazy val config: URLayer[Has[Config] with Has[DockerComposeContainer], Has[Config]] = (
+  def make(docker: DockerComposeContainer, config: Config): UIO[Config] =
+    docker
+      .getHostAndPort("mariadb_1")(3306)
+      .map { case (host, port) =>
+        val c = config.copy(dbTransactor = config.dbTransactor.copy(url = show"jdbc:mysql://$host:$port/idealvoting"))
+        println(c)
+        c
+      }
+      .orDie
+
+  lazy val layer: URLayer[Has[Config] with Has[DockerComposeContainer], Has[Config]] = (
     for {
-      config0 <- ZIO.service[Config]
       docker <- ZIO.service[DockerComposeContainer]
-      (host, port) <- docker.getHostAndPort("mariadb_1")(3306)
-      config = config0.copy(dbTransactor =
-        config0.dbTransactor.copy(url = show"jdbc:mysql://$host:$port/idealvoting"),
-      )
-      _ = println(config)
+      config <- ZIO.service[Config]
+      config <- make(docker, config)
     } yield config
-  ).orDie.toLayer
+  ).toLayer
 
 }
