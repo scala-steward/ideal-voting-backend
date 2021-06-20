@@ -18,7 +18,7 @@ object Dependencies {
     val zioMagic = "0.3.3"
 
     // Test
-    val zioTestcontainers = "0.2.0"
+    val zioTestcontainers = "0.2.2"
 
     // Scalafix plugins
     val zioMagicComments = "0.1.0"
