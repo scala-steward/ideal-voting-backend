@@ -10,5 +10,77 @@ To start the server:
 > ./sbt server/run
 ```
 
+## API
+
+### Create election
+
+`/v1/election` `POST`
+
+Example request:
+```json5
+{
+  "title": "My Election",
+  "description": "Election description", // optional
+  "admin": "john.doe@gmail.com",
+  "options": [
+    {
+      "title": "Option A",
+      "description": "This is option A" // optional
+    },
+    {
+      "title": "Option B",
+      "description": "This is option B" // optional
+    }
+  ],
+  "voters": [
+    "alice@yahoo.com",
+    "Bob <bob@mail.com>"
+  ]
+}
+```
+Example response:
+```json5
+{
+  "links": [
+    {
+      "href": "/v1/election/admin/my-election/asdfasdfasdf",
+      "rel": "election-view-admin",
+      "method": "GET"
+    }
+  ]
+}
+```
+
+### Cast a vote
+
+`/v1/election/<election-title-mangled>/<token>` `POST`
+
+Example request:
+
+`/v1/election/my-election/qwerqwerqwer`
+```json5
+{
+  "preferences": [
+    2,
+    1
+  ]
+}
+```
+
+Example response:
+```json5
+{
+  "links": [
+    {
+      "href": "/v1/election/my-election/qwerqwerqwer",
+      "rel": "election-view",
+      "method": "GET"
+    }
+  ]
+}
+```
+
+
+
 [Link-GitHubActions]: https://github.com/Idealiste-cz/ideal-voting-backend/actions/workflows/release.yml?query=branch%3Amaster "GitHub Actions link"
 [Badge-GitHubActions]: https://github.com/Idealiste-cz/ideal-voting-backend/actions/workflows/release.yml/badge.svg "GitHub Actions badge"

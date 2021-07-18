@@ -6,14 +6,14 @@ import cz.idealiste.idealvoting.server.Voting._
 import emil.MailAddress
 import org.apache.commons.lang3.StringUtils
 import zio._
-import zio.clock.Clock
 import zio.interop.catz.core._
+import zio.logging.Logger
 import zio.random.Random
 
 import java.time.OffsetDateTime
 import scala.collection.immutable.SortedSet
 
-class Voting(config: Config.Voting, db: Db, random: Random.Service, clock: Clock.Service) {
+class Voting(config: Config.Voting, db: Db, logger: Logger[String], random: Random.Service) {
 
   private val generateToken: UIO[String] = random
     .nextIntBetween(97, 123)
@@ -35,20 +35,21 @@ class Voting(config: Config.Voting, db: Db, random: Random.Service, clock: Clock
     ElectionViewAdmin(election.metadata, election.admin, election.options, voters)
   }
 
-  def createElection(create: CreateElection): Task[(String, String)] = {
+  def createElection(create: CreateElection, now: OffsetDateTime): Task[(String, String)] = {
     for {
       adminToken <- generateToken
       voters <- create.voters.traverse { email =>
         generateToken.map(Voter(email, _, voted = false))
       }
-      now <- clock.currentDateTime
       titleMangled = mangleTitle(create.title)
       electionMetadata = ElectionMetadata(create.title, titleMangled, create.description, now, None)
       admin = Admin(create.admin, adminToken)
       options = create.options.zipWithIndex.map { case (CreateOption(title, description), id) =>
         BallotOption(id, title, description)
       }
-      _ <- db.createElection(electionMetadata, admin, options, voters)
+      () <- logger.debug(s"Creating election $electionMetadata with admin $admin, voters $voters and options $options.")
+      () <- db.createElection(electionMetadata, admin, options, voters)
+      () <- logger.info(s"Created election $titleMangled.")
     } yield (titleMangled, adminToken)
   }
 
@@ -65,10 +66,22 @@ class Voting(config: Config.Voting, db: Db, random: Random.Service, clock: Clock
   def castVote(token: String, preferences: List[Int]): Task[CastVoteResult] = {
     for {
       election <- db.readElection(token)
-      result <- election.map(election => Vote.make(preferences, election.optionsMap)) match {
-        case None                    => Task.succeed(VoteInsertResult.TokenNotFound)
-        case Some(Left(invalidVote)) => Task.succeed(invalidVote)
-        case Some(Right(vote))       => db.castVote(token, vote)
+      result <- election match {
+        case None =>
+          logger.info(s"Couldn't cast vote, because election for token $token not found.") >>
+            Task.succeed(VoteInsertResult.TokenNotFound)
+        case Some(election) =>
+          Vote.make(preferences, election.optionsMap) match {
+            case Left(invalidVote) =>
+              logger.info(
+                s"Couldn't cast vote for election ${election.metadata.titleMangled} because of $invalidVote",
+              ) >> Task.succeed(invalidVote)
+            case Right(vote) =>
+              db.castVote(token, vote)
+                .flatTap(r =>
+                  logger.info(s"Casting vote for election ${election.metadata.titleMangled} with result $r."),
+                )
+          }
       }
     } yield result
   }
@@ -161,11 +174,16 @@ object Voting {
     final case object SuccessfullyVoted extends VoteInsertResult
   }
 
-  def make(config: Config.Voting, db: Db, random: Random.Service, clock: Clock.Service): Voting =
-    new Voting(config, db, random, clock)
+  def make(
+      config: Config.Voting,
+      db: Db,
+      logger: Logger[String],
+      random: Random.Service,
+  ): Voting =
+    new Voting(config, db, logger, random)
 
   val layer: URLayer[
-    Has[Config.Voting] with Has[Db] with Has[Random.Service] with Has[Clock.Service],
+    Has[Config.Voting] with Has[Db] with Has[Logger[String]] with Has[Random.Service],
     Has[Voting],
   ] =
     (make _).toLayer

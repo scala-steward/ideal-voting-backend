@@ -5,6 +5,7 @@ import zio._
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.doobie.liquibase.ZIODoobieLiquibase
+import zio.logging.slf4j.Slf4jLogger
 import zio.magic._
 import zio.random.Random
 import zio.system.System
@@ -26,6 +27,7 @@ object Main extends App {
 
   lazy val httpLayer: RLayer[Blocking with Clock with Random with Has[Config], Has[Http]] =
     ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config], Has[Http]](
+      Slf4jLogger.make((_, s) => s),
       Config.DbTransactor.layer,
       ZIODoobieLiquibase.layer,
       Db.layer,

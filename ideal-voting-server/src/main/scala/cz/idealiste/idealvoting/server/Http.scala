@@ -7,16 +7,17 @@ import emil.MailAddress
 import emil.javamail.syntax._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
+import org.http4s._
 import org.http4s.circe.CirceEntityDecoder.circeEntityDecoder
 import org.http4s.circe.CirceEntityEncoder.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.{EntityDecoder, EntityEncoder, HttpApp, HttpRoutes, Method}
 import zio._
+import zio.clock.Clock
 import zio.interop.catz._
 
-class Http(voting: Voting) {
+class Http(voting: Voting, clock: Clock.Service) {
 
   private val serviceV1 = {
     val Http4sDslTask: Http4sDsl[Task] = Http4sDsl[Task]
@@ -35,10 +36,11 @@ class Http(voting: Voting) {
             req.options.map(req => CreateOption(req.title, req.description)),
             req.voters,
           )
-          (titleMangled, token) <- voting.createElection(createElection)
+          now <- clock.currentDateTime
+          (titleMangled, token) <- voting.createElection(createElection, now)
           resp = LinksResponse(
             List(
-              Link(show"v1/election/admin/$titleMangled/$token", "election-view-admin", GET),
+              Link(show"/v1/election/admin/$titleMangled/$token", "election-view-admin", GET),
             ),
           )
           resp <- Created(resp)
@@ -56,11 +58,11 @@ class Http(voting: Voting) {
               electionView.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
               electionView.voter.email,
               electionView.voter.token,
-              List(Link(show"v1/election/$titleMangled/$token", "self", GET)) ++ (
+              List(Link(show"/v1/election/$titleMangled/$token", "self", GET)) ++ (
                 if (electionView.voter.voted) List()
                 else
                   List(
-                    Link(show"v1/election/$titleMangled/$token", "cast-vote", POST),
+                    Link(show"/v1/election/$titleMangled/$token", "cast-vote", POST),
                   )
               ),
             )
@@ -81,7 +83,7 @@ class Http(voting: Voting) {
             case VoteInsertResult.SuccessfullyVoted =>
               val resp = LinksResponse(
                 List(
-                  Link(show"v1/election/$titleMangled/$token", "election-view", GET),
+                  Link(show"/v1/election/$titleMangled/$token", "election-view", GET),
                 ),
               )
               Accepted(resp)
@@ -101,7 +103,7 @@ class Http(voting: Voting) {
               electionViewAdmin.options.map(o => GetOptionResponse(o.id, o.title, o.description)),
               electionViewAdmin.voters.map(v => GetVoterResponse(v.email, v.voted)),
               List(
-                Link(show"v1/election/admin/$titleMangled/$token", "election-view-admin", GET),
+                Link(show"/v1/election/admin/$titleMangled/$token", "self", GET),
               ),
             )
           }
@@ -266,9 +268,9 @@ object Http {
       circeEntityDecoder[Task, CastVoteRequest]
   }
 
-  def make(voting: Voting): Http = new Http(voting)
+  def make(voting: Voting, clock: Clock.Service): Http = new Http(voting, clock)
 
-  val layer: URLayer[Has[Voting], Has[Http]] =
+  val layer: URLayer[Has[Voting] with Has[Clock.Service], Has[Http]] =
     (make _).toLayer
 
 }

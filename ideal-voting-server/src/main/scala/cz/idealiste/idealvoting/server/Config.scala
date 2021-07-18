@@ -33,7 +33,7 @@ object Config {
   }
 
   implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
-  def layer(args: List[String]): URLayer[System, Has[Config]] = (
+  def make(args: List[String]): URIO[System, Config] = (
     for {
       typesafe <- TypesafeConfigSource.fromDefaultLoader
       env <- ConfigSource.fromSystemEnv
@@ -41,5 +41,6 @@ object Config {
       source = cmd <> env <> typesafe
       config <- ZIO.fromEither(read(implicitly[ConfigDescriptor[Config]].from(source)))
     } yield config
-  ).orDie.toLayer
+  ).orDie
+  def layer(args: List[String]): URLayer[System, Has[Config]] = make(args).toLayer
 }
