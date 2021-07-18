@@ -20,8 +20,8 @@
     </appender>
 
     <root level="debug">
-        <!--<appender-ref ref="STDOUT"/>-->
-        <appender-ref ref="stdoutjson"/>
+        <appender-ref ref="STDOUT"/>
+<!--        <appender-ref ref="stdoutjson"/>-->
     </root>
 
     <logger name="ch.qos.logback" level="WARN"/>

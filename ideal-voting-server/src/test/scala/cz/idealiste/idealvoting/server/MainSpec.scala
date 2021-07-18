@@ -12,6 +12,8 @@ import zio._
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.interop.catz._
+import zio.logging.Logging
+import zio.logging.slf4j.Slf4jLogger
 import zio.magic._
 import zio.random.Random
 import zio.system.System
@@ -158,11 +160,12 @@ object MainSpec extends DefaultRunnableSpec {
       },
     ).provideSomeLayerShared[Blocking with Random with System](testLayer.orDie) @@ sequential
 
-  lazy val testLayerConfig: RLayer[Blocking with System, Has[Config]] =
-    ZLayer.fromSomeMagic[Blocking with System, Has[Config] with Has[DockerComposeContainer]](
+  lazy val testLayerConfig: RLayer[Blocking with System, Has[Config] with Logging] =
+    ZLayer.fromSomeMagic[Blocking with System, Has[Config] with Logging with Has[DockerComposeContainer]](
+      Slf4jLogger.make((_, s) => s),
       Config.layer(List()),
       TestContainer.dockerCompose,
-    ) >>> TestContainer.layer
+    ) >+> TestContainer.layer
 
   lazy val testLayer: RLayer[Blocking with Random with System, Has[Http]] =
     ZLayer.fromSomeMagic[Blocking with Random with System, Has[Http]](

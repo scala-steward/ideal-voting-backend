@@ -40,6 +40,7 @@ lazy val server = project
       Dependencies.zioTestSbt % Test,
     ),
   )
+  .enablePlugins(BuildInfoPlugin)
 
 lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings ++ List(
   organization := "cz.idealiste",

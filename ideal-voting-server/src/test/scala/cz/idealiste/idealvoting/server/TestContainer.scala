@@ -5,6 +5,7 @@ import com.dimafeng.testcontainers.DockerComposeContainer._
 import com.dimafeng.testcontainers.{DockerComposeContainer, ExposedService}
 import zio._
 import zio.blocking.Blocking
+import zio.logging.{Logger, Logging}
 import zio.testcontainers._
 
 import java.io.File
@@ -21,21 +22,21 @@ object TestContainer {
       ),
     ).toLayer
 
-  def make(docker: DockerComposeContainer, config: Config): UIO[Config] =
+  def make(docker: DockerComposeContainer, config: Config, logger: Logger[String]): UIO[Config] =
     docker
       .getHostAndPort("mariadb_1")(3306)
-      .map { case (host, port) =>
+      .flatMap { case (host, port) =>
         val c = config.copy(dbTransactor = config.dbTransactor.copy(url = show"jdbc:mysql://$host:$port/idealvoting"))
-        println(c)
-        c
+        logger.info(s"Modified test configuration: $c.").as(c)
       }
       .orDie
 
-  lazy val layer: URLayer[Has[Config] with Has[DockerComposeContainer], Has[Config]] = (
+  lazy val layer: URLayer[Has[Config] with Has[DockerComposeContainer] with Logging, Has[Config]] = (
     for {
       docker <- ZIO.service[DockerComposeContainer]
       config <- ZIO.service[Config]
-      config <- make(docker, config)
+      logger <- ZIO.service[Logger[String]]
+      config <- make(docker, config, logger)
     } yield config
   ).toLayer
 
