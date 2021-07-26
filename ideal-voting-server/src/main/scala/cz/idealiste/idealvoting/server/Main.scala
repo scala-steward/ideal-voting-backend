@@ -18,8 +18,8 @@ object Main extends App {
 
   def serverLayer(
       args: List[String],
-  ): RLayer[Blocking with Clock with Random with System, Has[Server[Task]]] =
-    ZLayer.fromSomeMagic[Blocking with Clock with Random with System, Has[Server[Task]]](
+  ): RLayer[Blocking with Clock with Random with System, Has[Server]] =
+    ZLayer.fromSomeMagic[Blocking with Clock with Random with System, Has[Server]](
       Slf4jLogger.make((_, s) => s),
       Config.layer(args),
       httpLayer,

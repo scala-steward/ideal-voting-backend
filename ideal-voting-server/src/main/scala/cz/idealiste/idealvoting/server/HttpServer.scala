@@ -1,13 +1,13 @@
 package cz.idealiste.idealvoting.server
 
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Server
-import org.http4s.server.blaze.BlazeServerBuilder
 import zio._
 import zio.interop.catz._
 
 object HttpServer {
 
-  def make(config: Config.HttpServer, http: Http): TaskManaged[Server[Task]] =
+  def make(config: Config.HttpServer, http: Http): TaskManaged[Server] =
     Managed.runtime.flatMap { implicit r: Runtime[Any] =>
       import zio.interop.catz.implicits._
 
@@ -18,7 +18,7 @@ object HttpServer {
         .toManagedZIO
     }
 
-  val layer: RLayer[Has[Config.HttpServer] with Has[Http], Has[Server[Task]]] = (
+  val layer: RLayer[Has[Config.HttpServer] with Has[Http], Has[Server]] = (
     for {
       config <- ZManaged.service[Config.HttpServer]
       http <- ZManaged.service[Http]
