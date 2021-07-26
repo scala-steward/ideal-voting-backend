@@ -5,3 +5,5 @@ databaseChangeLog:
   - include:  { file: db/changelog/04.voter.yaml }
   - include:  { file: db/changelog/05.vote.yaml }
   - include:  { file: db/changelog/06.preference.yaml }
+  - include:  { file: db/changelog/07.result.yaml }
+  - include:  { file: db/changelog/08.positions.yaml }

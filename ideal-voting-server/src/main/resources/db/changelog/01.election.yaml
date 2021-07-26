@@ -37,9 +37,6 @@ databaseChangeLog:
                   type: timestamp with time zone
                   constraints:
                     nullable: false
-              - column:
-                  name: ended
-                  type: timestamp with time zone
         - modifySql:
             dbms: mariadb,mysql # mariadb doesn't have `timestamp with time zone`
             replace:

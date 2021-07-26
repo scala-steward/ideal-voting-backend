@@ -45,7 +45,11 @@ Example response:
     {
       "href": "/v1/election/admin/my-election/asdfasdfasdf",
       "rel": "election-view-admin",
-      "method": "GET"
+      "method": "GET",
+      "parameters": {
+        "titleMangled": "my-election",
+        "token": "asdfasdfasdf"
+      }
     }
   ]
 }
@@ -61,8 +65,8 @@ Example request:
 ```json5
 {
   "preferences": [
-    2,
-    1
+    1,
+    0
   ]
 }
 ```
@@ -74,12 +78,42 @@ Example response:
     {
       "href": "/v1/election/my-election/qwerqwerqwer",
       "rel": "election-view",
-      "method": "GET"
+      "method": "GET",
+      "parameters": {
+        "titleMangled": "my-election",
+        "token": "qwerqwerqwer"
+      }
     }
   ]
 }
 ```
 
+### End election
+
+`/v1/election/admin/<election-title-mangled>/<token>` `POST`
+
+Example request:
+
+`/v1/election/admin/my-election/qwerasdfzxcv`
+
+_empty body_
+
+Example response:
+```json5
+{
+  "links": [
+    {
+      "href": "/v1/election/admin/my-election/qwerasdfzxcv",
+      "rel": "election-view-admin",
+      "method": "GET",
+      "parameters": {
+        "titleMangled": "my-election",
+        "token": "qwerasdfzxcv"
+      }
+    }
+  ]
+}
+```
 
 
 [Link-GitHubActions]: https://github.com/Idealiste-cz/ideal-voting-backend/actions/workflows/release.yml?query=branch%3Amaster "GitHub Actions link"

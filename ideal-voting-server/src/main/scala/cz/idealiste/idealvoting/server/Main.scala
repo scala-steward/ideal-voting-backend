@@ -32,6 +32,7 @@ object Main extends App {
       Config.DbTransactor.layer,
       ZIODoobieLiquibase.layer,
       Db.layer,
+      VotingSystem.layer,
       Config.Voting.layer,
       Voting.layer,
       Http.layer,

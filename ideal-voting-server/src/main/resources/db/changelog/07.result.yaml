@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: result-01
+      author: idealvoting
+      changes:
+        - createTable:
+            tableName: result
+            columns:
+              - column: { name: id, type: int, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: election_id, type: int, constraints: { references: election (id), foreignKeyName: result election id, nullable: false, unique: true } }
+  - changeSet:
+      id: result-02
+      author: idealvoting
+      changes:
+        - addColumn:
+            tableName: result
+            columns:
+              - column: { name: ended, type: timestamp with time zone, constraints: { nullable: false } }
+        - modifySql:
+            dbms: mariadb,mysql # mariadb doesn't have `timestamp with time zone`
+            replace:
+              - replace: timestamp with time zone
+              - with: timestamp

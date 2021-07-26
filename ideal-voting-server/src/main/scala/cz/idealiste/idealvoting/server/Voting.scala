@@ -13,8 +13,15 @@ import zio.random.Random
 import java.time.OffsetDateTime
 import scala.collection.immutable.SortedSet
 
-class Voting(config: Config.Voting, db: Db, logger: Logger[String], random: Random.Service) {
+class Voting(
+    config: Config.Voting,
+    db: Db,
+    votingSystem: VotingSystem,
+    logger: Logger[String],
+    random: Random.Service,
+) {
 
+  // TODO: distinct type for Voter token and Admin token and represent internally as UUID
   private val generateToken: UIO[String] = random
     .nextIntBetween(97, 123)
     .replicateM(config.tokenLength)
@@ -27,12 +34,18 @@ class Voting(config: Config.Voting, db: Db, logger: Logger[String], random: Rand
   private def electionToView(election: Election, token: String): ElectionView = {
     val admin = AdminView(election.admin.email)
     val voter = election.voters.find(_.token === token).get
-    ElectionView(election.metadata, admin, election.options, voter)
+    ElectionView(election.metadata, admin, election.options, voter, election.result.map(ResultView(_, election.votes)))
   }
 
   private def electionToViewAdmin(election: Election): ElectionViewAdmin = {
     val voters = election.voters.map { case Voter(email, _, voted) => VoterView(email, voted) }
-    ElectionViewAdmin(election.metadata, election.admin, election.options, voters)
+    ElectionViewAdmin(
+      election.metadata,
+      election.admin,
+      election.options,
+      voters,
+      election.result.map(ResultView(_, election.votes)),
+    )
   }
 
   def createElection(create: CreateElection, now: OffsetDateTime): Task[(String, String)] = {
@@ -42,7 +55,7 @@ class Voting(config: Config.Voting, db: Db, logger: Logger[String], random: Rand
         generateToken.map(Voter(email, _, voted = false))
       }
       titleMangled = mangleTitle(create.title)
-      electionMetadata = ElectionMetadata(create.title, titleMangled, create.description, now, None)
+      electionMetadata = ElectionMetadata(create.title, titleMangled, create.description, now)
       admin = Admin(create.admin, adminToken)
       options = create.options.zipWithIndex.map { case (CreateOption(title, description), id) =>
         BallotOption(id, title, description)
@@ -78,13 +91,35 @@ class Voting(config: Config.Voting, db: Db, logger: Logger[String], random: Rand
               ) >> Task.succeed(invalidVote)
             case Right(vote) =>
               db.castVote(token, vote)
-                .flatTap(r =>
+                .flatTap(r => // TODO: logging for each case as in `endElection`
                   logger.info(s"Casting vote for election ${election.metadata.titleMangled} with result $r."),
                 )
           }
       }
     } yield result
   }
+
+  def endElection(token: String, now: OffsetDateTime): Task[EndElectionResult] = for {
+    election <- db.readElectionAdmin(token)
+    result <- election match {
+      case None =>
+        logger.info(s"Couldn't end election, because election for token $token not found.") >>
+          Task.succeed(EndElectionResult.TokenNotFound)
+      case Some(Election(_, _, _, _, _, _, Some(Result(ended, _)))) =>
+        logger.info(s"Couldn't end election, because election for token $token already ended on $ended.") >>
+          Task.succeed(EndElectionResult.ElectionAlreadyEnded)
+      case Some(election) =>
+        val positions = votingSystem.computePositions(election.options.map(_.id), election.votes.map(_.preferences))
+        db.endElection(token, positions, now).flatTap {
+          case EndElectionResult.TokenNotFound =>
+            logger.info(s"Couldn't end election, because election for token $token not found (from DB).")
+          case EndElectionResult.ElectionAlreadyEnded =>
+            logger.info(s"Couldn't end election, because election for token $token already ended (from DB).")
+          case EndElectionResult.SuccessfullyEnded =>
+            logger.info(s"Successfully ended election for token $token with positions $positions.")
+        }
+    }
+  } yield result
 }
 
 object Voting {
@@ -104,7 +139,6 @@ object Voting {
       titleMangled: String,
       description: Option[String],
       started: OffsetDateTime,
-      ended: Option[OffsetDateTime],
   )
 
   final case class Admin(email: MailAddress, token: String)
@@ -113,13 +147,15 @@ object Voting {
 
   final case class Voter(email: MailAddress, token: String, voted: Boolean)
 
+  // TODO: use NonEmptyList where applicable
   final case class Election(
       metadata: ElectionMetadata,
       admin: Admin,
       options: List[BallotOption],
       voters: List[Voter],
-      votes: List[Vote],
+      votes: List[Vote], // TODO: represent as Map[Vote, Int]
       optionsMap: Map[Int, BallotOption],
+      result: Option[Result],
   )
 
   final case class AdminView(email: MailAddress)
@@ -131,6 +167,7 @@ object Voting {
       admin: AdminView,
       options: List[BallotOption],
       voter: Voter,
+      result: Option[ResultView],
   )
 
   final case class ElectionViewAdmin(
@@ -138,9 +175,14 @@ object Voting {
       admin: Admin,
       options: List[BallotOption],
       voters: List[VoterView],
+      result: Option[ResultView],
   )
 
-  sealed abstract case class Vote(preferences: List[BallotOption])
+  final case class Result(ended: OffsetDateTime, positions: List[Int])
+
+  final case class ResultView(result: Result, votes: List[Vote])
+
+  sealed abstract case class Vote(preferences: List[Int])
   object Vote {
     def make(preferences: List[Int], optionsMap: Map[Int, BallotOption]): Either[InvalidVote, Vote] = {
       val duplicities = preferences.groupBy(identity).filter(_._2.length > 1).keys.toList.toNel
@@ -148,7 +190,7 @@ object Voting {
       (duplicities, unavailable) match {
         case (Some(duplicities), _) => InvalidVote.DuplicateOptions(duplicities).asLeft
         case (_, Some(unavailable)) => InvalidVote.UnavailableOptions(unavailable).asLeft
-        case _                      => new Vote(preferences.map(optionsMap)) {}.asRight
+        case _                      => new Vote(preferences) {}.asRight
       }
     }
     def makeValidated(
@@ -171,19 +213,28 @@ object Voting {
   object VoteInsertResult {
     final case object TokenNotFound extends VoteInsertResult
     final case object AlreadyVoted extends VoteInsertResult
+    final case object ElectionEnded extends VoteInsertResult
     final case object SuccessfullyVoted extends VoteInsertResult
+  }
+
+  sealed trait EndElectionResult extends Product with Serializable
+  object EndElectionResult {
+    final case object TokenNotFound extends EndElectionResult
+    final case object ElectionAlreadyEnded extends EndElectionResult
+    final case object SuccessfullyEnded extends EndElectionResult
   }
 
   def make(
       config: Config.Voting,
       db: Db,
+      votingSystem: VotingSystem,
       logger: Logger[String],
       random: Random.Service,
   ): Voting =
-    new Voting(config, db, logger, random)
+    new Voting(config, db, votingSystem, logger, random)
 
   val layer: URLayer[
-    Has[Config.Voting] with Has[Db] with Has[Logger[String]] with Has[Random.Service],
+    Has[Config.Voting] with Has[Db] with Has[VotingSystem] with Has[Logger[String]] with Has[Random.Service],
     Has[Voting],
   ] =
     (make _).toLayer
