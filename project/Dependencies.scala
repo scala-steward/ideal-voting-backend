@@ -7,8 +7,8 @@ object Dependencies {
     val circe = "0.14.1"
     val commonsLang = "3.12.0"
     val emil = "0.9.2"
-    val http4s = "0.23.4"
-    val jackson = "2.12.5"
+    val http4s = "0.22.5"
+    val jackson = "2.13.0"
     val liquibaseSlf4j = "4.0.0"
     val logback = "1.2.6"
     val logbackJackson = "0.1.5"
@@ -18,12 +18,12 @@ object Dependencies {
     val zio = "1.0.12"
     val zioCats = "2.5.1.0"
     val zioConfig = "1.0.10"
-    val zioDoobie = "0.0.5"
+    val zioDoobie = "0.0.6"
     val zioLoggingSlf4j = "0.5.12"
-    val zioMagic = "0.3.8"
+    val zioMagic = "0.3.9"
 
     // Test
-    val zioTestcontainers = "0.2.2"
+    val zioTestcontainers = "0.2.3"
 
     // Scalafix plugins
     val zioMagicComments = "0.1.0"
