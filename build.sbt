@@ -1,3 +1,5 @@
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 lazy val root = project
   .in(file("."))
   .settings(commonSettings)

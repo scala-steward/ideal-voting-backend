@@ -5,7 +5,7 @@ import com.dimafeng.testcontainers.DockerComposeContainer
 import cz.idealiste.idealvoting.server.Http._
 import emil.MailAddress
 import emil.javamail.syntax._
-import org.http4s.circe.CirceEntityEncoder.circeEntityEncoder
+import org.http4s.circe.CirceEntityCodec._
 import org.http4s.implicits._
 import org.http4s.{Method, Request, Status, Uri}
 import zio._
