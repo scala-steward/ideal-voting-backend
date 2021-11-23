@@ -29,6 +29,7 @@
     <logger name="org.http4s" level="WARN"/>
     <logger name="liquibase" level="WARN"/>
 
+    <logger name="com.github.dockerjava.zerodep.shaded.org.apache.hc" level="WARN"/>
     <logger name="org.testcontainers" level="WARN"/>
 
     <statusListener class="ch.qos.logback.core.status.OnErrorConsoleStatusListener"/>
