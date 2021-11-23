@@ -41,7 +41,7 @@ object Config {
       cmd = ConfigSource.fromCommandLineArgs(args)
       source = cmd <> env <> typesafe
       config <- ZIO.fromEither(read(implicitly[ConfigDescriptor[Config]].from(source)))
-      () <- logger.info(s"${cz.idealiste.idealvotingserver.BuildInfo}, configuration: $config")
+      () <- logger.info(s"${cz.idealiste.ideal.voting.server.BuildInfo}, configuration: $config")
     } yield config
   ).orDie
   def layer(args: List[String]): URLayer[System with Logging, Has[Config]] = (
