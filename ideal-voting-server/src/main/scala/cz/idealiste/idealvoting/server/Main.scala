@@ -23,17 +23,17 @@ object Main extends App {
       Slf4jLogger.make((_, s) => s),
       Config.layer(args),
       httpLayer,
-      Config.HttpServer.layer,
+      HttpServer.Config.layer,
       HttpServer.layer,
     )
 
   lazy val httpLayer: RLayer[Blocking with Clock with Random with Has[Config] with Logging, Has[Http]] =
     ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config] with Logging, Has[Http]](
-      Config.DbTransactor.layer,
+      Db.Transactor.layer,
       ZIODoobieLiquibase.layer,
       Db.layer,
       VotingSystem.layer,
-      Config.Voting.layer,
+      Voting.Config.layer,
       Voting.layer,
       Http.layer,
     )

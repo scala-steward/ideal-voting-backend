@@ -2,6 +2,7 @@ package cz.idealiste.idealvoting.server
 
 import cats.Applicative
 import cats.implicits._
+import cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.server.Voting._
 import doobie._
 import doobie.implicits._
@@ -9,14 +10,15 @@ import doobie.implicits.javatimedrivernative._
 import emil.MailAddress
 import emil.doobie.EmilDoobieMeta._
 import zio._
+import zio.doobie.liquibase.ZIODoobieLiquibase
 import zio.interop.catz._
 
 import java.time.OffsetDateTime
 
 class Db(transactor: Transactor[Task]) {
 
-  private implicit lazy val mailAddressRead: Read[MailAddress] = mailAddressMulicolumnRead
-  private implicit lazy val mailAddressWrite: Write[MailAddress] = mailAddressMulicolumnWrite
+  private implicit lazy val mailAddressRead: Read[MailAddress] = mailAddressMulticolumnRead
+  private implicit lazy val mailAddressWrite: Write[MailAddress] = mailAddressMulticolumnWrite
 
   def createElection(
       metadata: ElectionMetadata,
@@ -216,5 +218,10 @@ object Db {
 
   val layer: URLayer[Has[Transactor[Task]], Has[Db]] =
     (make _).toLayer
+
+  object Transactor {
+    val layer: RLayer[Has[server.Config], Has[ZIODoobieLiquibase.Config]] =
+      ZIO.service[server.Config].map(_.dbTransactor).toLayer
+  }
 
 }

@@ -6,8 +6,8 @@ object Dependencies {
 
     val circe = "0.14.1"
     val commonsLang = "3.12.0"
-    val emil = "0.9.6"
-    val http4s = "0.22.11"
+    val emil = "0.11.2"
+    val http4s = "0.23.10"
     val jackson = "2.13.1"
     val liquibaseSlf4j = "4.0.0"
     val logback = "1.2.11"
@@ -16,14 +16,12 @@ object Dependencies {
     val mariadb = "2.7.5"
     val snakeyaml = "1.30"
     val zio = "1.0.13"
-    val zioCats = "2.5.1.0"
-    val zioConfig = "1.0.10"
-    val zioDoobie = "0.1.1"
+    val zioDoobie = "0.2.0"
     val zioLoggingSlf4j = "0.5.14"
     val zioMagic = "0.3.11"
 
     // Test
-    val zioTestcontainers = "0.2.4"
+    val zioTestcontainers = "0.3.0"
 
     // Scalafix plugins
     val zioMagicComments = "0.1.0"
@@ -42,10 +40,6 @@ object Dependencies {
   val logbackJson = "ch.qos.logback.contrib" % "logback-json-classic" % Versions.logbackJson
   val mariadb = "org.mariadb.jdbc" % "mariadb-java-client" % Versions.mariadb
   val snakeyaml = "org.yaml" % "snakeyaml" % Versions.snakeyaml
-  val zio = "dev.zio" %% "zio" % Versions.zio
-  val zioCats = "dev.zio" %% "zio-interop-cats" % Versions.zioCats
-  val zioConfig = "dev.zio" %% "zio-config-typesafe" % Versions.zioConfig
-  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % Versions.zioConfig
   val zioDoobieLiquibase = "com.github.sideeffffect" %% "zio-doobie-liquibase" % Versions.zioDoobie
   val zioLoggingSlf4j = "dev.zio" %% "zio-logging-slf4j" % Versions.zioLoggingSlf4j
   val zioMagic = "io.github.kitlangton" %% "zio-magic" % Versions.zioMagic

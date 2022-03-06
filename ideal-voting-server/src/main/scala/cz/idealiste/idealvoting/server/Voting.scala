@@ -2,10 +2,13 @@ package cz.idealiste.idealvoting.server
 
 import cats.data.{NonEmptyList, NonEmptySet, ValidatedNec}
 import cats.implicits._
+import cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.server.Voting._
 import emil.MailAddress
 import org.apache.commons.lang3.StringUtils
 import zio._
+import zio.config._
+import zio.config.magnolia.DeriveConfigDescriptor
 import zio.interop.catz.core._
 import zio.logging.Logger
 import zio.random.Random
@@ -14,7 +17,7 @@ import java.time.OffsetDateTime
 import scala.collection.immutable.SortedSet
 
 class Voting(
-    config: Config.Voting,
+    config: Config,
     db: Db,
     votingSystem: VotingSystem,
     logger: Logger[String],
@@ -225,7 +228,7 @@ object Voting {
   }
 
   def make(
-      config: Config.Voting,
+      config: Config,
       db: Db,
       votingSystem: VotingSystem,
       logger: Logger[String],
@@ -234,8 +237,14 @@ object Voting {
     new Voting(config, db, votingSystem, logger, random)
 
   val layer: URLayer[
-    Has[Config.Voting] with Has[Db] with Has[VotingSystem] with Has[Logger[String]] with Has[Random.Service],
+    Has[Config] with Has[Db] with Has[VotingSystem] with Has[Logger[String]] with Has[Random.Service],
     Has[Voting],
   ] =
     (make _).toLayer
+
+  final case class Config(tokenLength: Int = 10)
+  object Config {
+    val layer: RLayer[Has[server.Config], Has[Config]] = ZIO.service[server.Config].map(_.voting).toLayer
+    implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
+  }
 }

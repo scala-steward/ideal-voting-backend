@@ -26,7 +26,7 @@ object TestContainer {
     docker
       .getHostAndPort("mariadb_1")(3306)
       .flatMap { case (host, port) =>
-        val c = config.copy(dbTransactor = config.dbTransactor.copy(url = show"jdbc:mysql://$host:$port/idealvoting"))
+        val c = config.copy(dbTransactor = config.dbTransactor.copy(url = show"jdbc:mariadb://$host:$port/idealvoting"))
         logger.info(s"Modified test configuration: $c.").as(c)
       }
       .orDie

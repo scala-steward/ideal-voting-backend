@@ -10,40 +10,25 @@ import zio.system.System
 
 final case class Config(
     dbTransactor: ZIODoobieLiquibase.Config,
-    httpServer: Config.HttpServer,
-    voting: Config.Voting,
+    httpServer: HttpServer.Config,
+    voting: Voting.Config,
 )
 
 object Config {
-  object DbTransactor {
-    val layer: RLayer[Has[Config], Has[ZIODoobieLiquibase.Config]] =
-      ZIO.service[Config].map(_.dbTransactor).toLayer
-  }
-
-  final case class HttpServer(host: String, port: Int)
-  object HttpServer {
-    val layer: RLayer[Has[Config], Has[HttpServer]] = ZIO.service[Config].map(_.httpServer).toLayer
-    implicit lazy val configDescriptor: ConfigDescriptor[HttpServer] =
-      DeriveConfigDescriptor.descriptor[HttpServer]
-  }
-
-  final case class Voting(tokenLength: Int = 10)
-  object Voting {
-    val layer: RLayer[Has[Config], Has[Voting]] = ZIO.service[Config].map(_.voting).toLayer
-    implicit lazy val configDescriptor: ConfigDescriptor[Voting] = DeriveConfigDescriptor.descriptor[Voting]
-  }
 
   implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
-  def make(args: List[String], logger: Logger[String]): URIO[System, Config] = (
+
+  def make(args: List[String], logger: Logger[String]): URIO[System, Config] = {
+    val typesafe = TypesafeConfigSource.fromResourcePath
+    val env = ConfigSource.fromSystemEnv()
+    val cmd = ConfigSource.fromCommandLineArgs(args)
+    val source = cmd <> env <> typesafe
     for {
-      typesafe <- TypesafeConfigSource.fromDefaultLoader
-      env <- ConfigSource.fromSystemEnv
-      cmd = ConfigSource.fromCommandLineArgs(args)
-      source = cmd <> env <> typesafe
-      config <- ZIO.fromEither(read(implicitly[ConfigDescriptor[Config]].from(source)))
+      config <- read(implicitly[ConfigDescriptor[Config]].from(source))
       () <- logger.info(s"${cz.idealiste.ideal.voting.server.BuildInfo}, configuration: $config")
     } yield config
-  ).orDie
+  }.orDie
+
   def layer(args: List[String]): URLayer[System with Logging, Has[Config]] = (
     for {
       logger <- ZIO.service[Logger[String]]

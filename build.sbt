@@ -29,10 +29,6 @@ lazy val server = project
       Dependencies.logbackJson,
       Dependencies.mariadb,
       Dependencies.snakeyaml,
-      Dependencies.zio,
-      Dependencies.zioCats,
-      Dependencies.zioConfig,
-      Dependencies.zioConfigMagnolia,
       Dependencies.zioDoobieLiquibase,
       Dependencies.zioLoggingSlf4j,
       Dependencies.zioMagic,
@@ -66,6 +62,10 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
     moduleFilter(organization = "ch.qos.logback", name = "logback-core"),
     moduleFilter(organization = "com.zaxxer", name = "HikariCP"),
     moduleFilter(organization = "org.slf4j", name = "slf4j-api"),
+  ),
+  missinglinkIgnoreDestinationPackages ++= List(
+    IgnoredPackage("java.sql"), // https://github.com/tpolecat/doobie/pull/1632
+    IgnoredPackage("org.osgi.framework"),
   ),
   mimaReportBinaryIssues := {},
   // https://github.com/olafurpg/sbt-ci-release/issues/181
