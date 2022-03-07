@@ -219,5 +219,5 @@ addCommandAlias(
 )
 addCommandAlias(
   "cipublish",
-  "; check; idealVotingContract/versionCheck; +idealVotingContract/generateOpenApiDoc; +publishLocal; ci-release",
+  "; check; idealVotingContract/versionCheck; +Test/doc; +idealVotingContract/generateOpenApiDoc; ci-release; +publishLocal",
 )
