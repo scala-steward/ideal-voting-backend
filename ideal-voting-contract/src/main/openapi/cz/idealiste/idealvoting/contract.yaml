@@ -1,0 +1,105 @@
+openapi: 3.0.2
+info:
+  title: IDEALvoting server
+  description: >
+    This is IDEALvoting server
+  version: 1.0.0
+servers:
+  - url: /api/v1
+components:
+  schemas:
+    CreateElectionRequest:
+      type: object
+      required: [ title, admin, options, voters ]
+      properties:
+        title: { type: string, example: "My Election" }
+        description: { type: string, example: "Election description" }
+        admin: { type: string, format: email, example: "john.doe@gmail.com" }
+        options:
+          type: array
+          items:
+            type: object
+            required: [ title ]
+            properties: { title: { type: string, example: "Option A" }, description: { type: string, example: "This is option A" } }
+        voters: { type: array, items: { type: string, format: email, example: "Bob <bob@mail.com>" } }
+
+    LinksResponse:
+      type: object
+      required: [ links ]
+      properties:
+        links:
+          type: array
+          items:
+            type: object
+            required: [ href, rel, method, parameters ]
+            properties:
+              href: { type: string, format: uri-reference, example: "/api/v1/election/admin/my-election/asdfasdfasdf" }
+              rel: { type: string, example: "election-view-admin" }
+              method: { type: string, enum: [ GET, POST ] }
+              parameters:
+                type: array
+                items:
+                  type: object
+                  required: [ key, value ]
+                  properties:
+                    key: { type: string, example: "titleMangled" }
+                    value: { type: string, example: "my-election" }
+
+paths:
+  /election:
+    post:
+      description: >
+        Creates new election
+      operationId: createElection
+      parameters:
+        - name: X-Correlation-Id
+          in: header
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateElectionRequest' }
+            example:
+              {
+                "title": "My Election",
+                "description": "Election description", # optional
+                "admin": "john.doe@gmail.com",
+                "options": [
+                  {
+                    "title": "Option A",
+                    "description": "This is option A" # optional
+                  },
+                  {
+                    "title": "Option B",
+                    "description": "This is option B" # optional
+                  }
+                ],
+                "voters": [
+                  "alice@yahoo.com",
+                  "Bob <bob@mail.com>"
+                ]
+              }
+      responses:
+        '201':
+          description:
+            Election has been successfully created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LinksResponse' }
+              example:
+                {
+                  "links": [
+                    {
+                      "href": "/v1/election/admin/my-election/asdfasdfasdf",
+                      "rel": "election-view-admin",
+                      "method": "GET",
+                      "parameters": {
+                        "titleMangled": "my-election",
+                        "token": "asdfasdfasdf"
+                      }
+                    }
+                  ]
+                }

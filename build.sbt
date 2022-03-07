@@ -1,4 +1,88 @@
+import com.typesafe.tools.mima.core.{DirectMissingMethodProblem, ProblemFilters}
+
 Global / onChangedBuildSource := ReloadOnSourceChanges
+
+lazy val OpenApiHelpers = new {
+
+  private def dropExtension(file: File): String = {
+    file.getPath.split('.').toList match {
+      case l @ List()  => l
+      case l @ List(_) => l
+      case l           => l.dropRight(1)
+    }
+  }.mkString(".")
+
+  private def isOpenApiSpec(file: File): Boolean = {
+    import org.snakeyaml.engine.v2.api.{Load, LoadSettings}
+
+    import java.util.{Map => JMap}
+    import scala.io.Source
+    import scala.jdk.CollectionConverters._
+    import scala.util.{Try, Using}
+
+    Using(Source.fromFile(file)) { source =>
+      val reader = source.bufferedReader()
+      val docs = new Load(LoadSettings.builder().build()).loadAllFromReader(reader).asScala
+      val yamls = docs.flatMap(d => Try(d.asInstanceOf[JMap[String, Any]].asScala).toOption)
+      yamls.exists(_.contains("openapi"))
+    }.toOption.getOrElse(false)
+  }
+
+  def discoverFilesRelative(base: File, predicate: File => Boolean): List[File] = {
+    def recursiveListFiles(f: File): Array[File] = {
+      val these = f.listFiles
+      these.filter(f => f.isFile && predicate(f)) ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
+    }
+    recursiveListFiles(base).flatMap(_.relativeTo(base)).toList
+  }
+
+  def createGuardrailTasks(
+      sourceDirectory: File,
+  )(relativeFileToTasks: (String, String) => List[dev.guardrail.sbt.Types.Args]): List[dev.guardrail.sbt.Types.Args] = {
+    val specs = discoverFilesRelative(sourceDirectory, isOpenApiSpec)
+    specs.flatMap { relativeFile =>
+      val relativeFileString = relativeFile.getPath
+      val pkg = dropExtension(relativeFile).replace('/', '.')
+      relativeFileToTasks(relativeFileString, pkg)
+    }
+  }
+
+  def generateOpenApiDoc(crossTargetValue: File, openapiSourceDir: File): Int = {
+    import java.nio.file.Files
+    import scala.sys.process._
+    import scala.util.Using
+    val openapiFiles = discoverFilesRelative(openapiSourceDir, isOpenApiSpec)
+    val outDir = crossTargetValue / "openapi"
+    Files.createDirectories(outDir.toPath)
+    def command(openapiFile: File) = {
+      val openapiFilePath = openapiFile.getPath
+      val withoutExtension = dropExtension(openapiFile)
+      val outDirIndividual = outDir / withoutExtension
+      Files.createDirectories(outDirIndividual.toPath)
+      s"docker --config $crossTargetValue/dockerLocalConfig run --rm -v $outDirIndividual:/out -v $openapiSourceDir:/openapis openapitools/openapi-generator-cli:v5.2.1 generate -i /openapis/$openapiFilePath -g html -o /out"
+    }
+    val result = openapiFiles.map(command(_) !).sum
+    val items = openapiFiles.map { file =>
+      val relativePath = dropExtension(file)
+      val name = dropExtension(file).replace('/', '.')
+      s"""<li><a href="$relativePath/index.html" target="_blank"><code>$name</code></a></li>"""
+    }
+    val index =
+      s"""|<!DOCTYPE html>
+          |<html>
+          |<body>
+          |<h2>Index of OpenAPI documentation</h2>
+          |<ul>
+          |  ${items.mkString("\n  ")}
+          |</ul>
+          |</body>
+          |</html>
+          |""".stripMargin
+    Using(new java.io.PrintWriter(s"$outDir/index.html"))(_.write(index)).get
+    result
+  }
+
+}
 
 lazy val root = project
   .in(file("."))
@@ -7,21 +91,75 @@ lazy val root = project
     name := "ideal-voting-backend",
     publish / skip := true,
   )
-  .aggregate(server)
+  .aggregate(
+    idealVotingContract,
+    idealVotingServer,
+  )
 
-lazy val server = project
+lazy val idealVotingContract = project
+  .in(file("ideal-voting-contract"))
+  .settings(commonSettings)
+  .settings(
+    name := "ideal-voting-contract",
+    Compile / unmanagedSourceDirectories += (Compile / sourceDirectory).value / "openapi",
+    Compile / unmanagedResourceDirectories += (Compile / resourceDirectory).value / "openapi",
+    Test / unmanagedSourceDirectories += (Test / sourceDirectory).value / "openapi",
+    Test / unmanagedResourceDirectories += (Test / resourceDirectory).value / "openapi",
+    Compile / guardrailTasks := {
+      val base = (Compile / sourceDirectory).value / "openapi"
+      OpenApiHelpers.createGuardrailTasks(base) { (relativeFileString, pkg) =>
+        List(
+          ScalaClient(base / relativeFileString, pkg = pkg, framework = "http4s"),
+          ScalaServer(base / relativeFileString, pkg = pkg, framework = "http4s"),
+        )
+      }
+    },
+    generateOpenApiDocTask := {
+      val crossTargetValue = crossTarget.value
+      val openapiSourceDir = (Compile / sourceDirectory).value / "openapi"
+      val openapiResult = OpenApiHelpers.generateOpenApiDoc(crossTargetValue, openapiSourceDir)
+      if (openapiResult != 0) {
+        sys.error("openapi-generator-cli html failed")
+      }
+    },
+    Compile / packageDoc / mappings ++= {
+      val crossTargetValue = crossTarget.value
+      val openapiBase = crossTargetValue / "openapi"
+      val openapiFiles =
+        OpenApiHelpers.discoverFilesRelative(openapiBase, _ => true).map(f => (file(s"$openapiBase/$f"), s"openapi/$f"))
+      openapiFiles
+    },
+    ThisBuild / versionPolicyIntention := Compatibility.BinaryCompatible,
+    ThisBuild / versionPolicyIgnoredInternalDependencyVersions := Some("^\\d+\\.\\d+\\.\\d+\\+\\d+".r),
+    mimaBinaryIssueFilters ++= List(
+      ProblemFilters.exclude[DirectMissingMethodProblem]("*.apply"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("*.copy"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("*.this"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("*.<init>$default$*"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("*.apply$default$*"),
+    ),
+    Compile / scalacOptions -= "-Xfatal-warnings",
+    Compile / scalacOptions += "-Wconf:cat=unused:ws",
+    libraryDependencies ++= List(
+      Dependencies.http4sCirce,
+      Dependencies.http4sClient,
+      Dependencies.http4sDsl,
+      Dependencies.http4sServer,
+    ),
+  )
+  .enablePlugins(BuildInfoPlugin)
+
+lazy val idealVotingServer = project
   .in(file("ideal-voting-server"))
   .settings(commonSettings)
   .settings(
     name := "ideal-voting-server",
     Compile / mainClass := Some("cz.idealiste.idealvoting.server.Main"),
     libraryDependencies ++= List(
-      Dependencies.circe,
+      Dependencies.circeGeneric,
+      Dependencies.circeParser,
       Dependencies.commonsLang,
       Dependencies.emil,
-      Dependencies.http4sCirce,
-      Dependencies.http4sDsl,
-      Dependencies.http4sServer,
       Dependencies.jackson,
       Dependencies.liquibaseSlf4j % "runtime",
       Dependencies.logback,
@@ -38,6 +176,7 @@ lazy val server = project
       Dependencies.zioTestSbt % Test,
     ),
   )
+  .dependsOn(idealVotingContract)
   .enablePlugins(BuildInfoPlugin)
 
 lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings ++ List(
@@ -73,4 +212,13 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
 )
 
-addCommandAlias("ci", "; check; +publishLocal")
+lazy val generateOpenApiDocTask: TaskKey[Unit] = TaskKey[Unit]("generateOpenApiDoc")
+
+addCommandAlias(
+  "ci",
+  "; check; idealVotingContract/versionPolicyCheck; +idealVotingContract/generateOpenApiDoc; +publishLocal",
+)
+addCommandAlias(
+  "cipublish",
+  "; check; idealVotingContract/versionCheck; +idealVotingContract/generateOpenApiDoc; ci-release",
+)

@@ -27,10 +27,12 @@ object Dependencies {
     val zioMagicComments = "0.1.0"
   }
 
-  val circe = "io.circe" %% "circe-generic" % Versions.circe
+  val circeGeneric = "io.circe" %% "circe-generic" % Versions.circe
+  val circeParser = "io.circe" %% "circe-parser" % Versions.circe
   val commonsLang = "org.apache.commons" % "commons-lang3" % Versions.commonsLang
   val emil = "com.github.eikek" %% "emil-doobie" % Versions.emil
   val http4sCirce = "org.http4s" %% "http4s-circe" % Versions.http4s
+  val http4sClient = "org.http4s" %% "http4s-client" % Versions.http4s
   val http4sDsl = "org.http4s" %% "http4s-dsl" % Versions.http4s
   val http4sServer = "org.http4s" %% "http4s-blaze-server" % Versions.http4s
   val jackson = "com.fasterxml.jackson.core" % "jackson-databind" % Versions.jackson

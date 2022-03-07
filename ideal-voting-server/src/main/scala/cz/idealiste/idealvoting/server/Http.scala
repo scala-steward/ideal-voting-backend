@@ -1,6 +1,8 @@
 package cz.idealiste.idealvoting.server
 
 import cats.implicits._
+import cz.idealiste.idealvoting.contract
+import cz.idealiste.idealvoting.contract.definitions.LinksResponse.Links
 import cz.idealiste.idealvoting.server.Http._
 import cz.idealiste.idealvoting.server.Voting._
 import emil.MailAddress
@@ -13,15 +15,47 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
 import org.http4s.server.Router
 import zio._
+import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.interop.catz._
 
 import java.time.OffsetDateTime
 
-class Http(voting: Voting, clock: Clock.Service) {
+class Http(voting: Voting, clock: Clock.Service)(implicit r: Runtime[Has[Blocking.Service] with Has[Clock.Service]]) {
+
+  private object serviceV1handler extends contract.Handler[Task]() {
+    override def createElection(respond: contract.Resource.CreateElectionResponse.type)(
+        body: contract.definitions.CreateElectionRequest,
+        xCorrelationId: String,
+    ): Task[contract.Resource.CreateElectionResponse] = {
+      for {
+        admin <- Task(MailAddress.parseUnsafe(body.admin))
+        voters <- body.voters.traverse(voter => Task(MailAddress.parseUnsafe(voter)))
+        createElection = CreateElection(
+          body.title,
+          body.description,
+          admin,
+          body.options.map(req => CreateOption(req.title, req.description)).toList,
+          voters.toList,
+        )
+        now <- clock.currentDateTime
+        (titleMangled, token) <- voting.createElection(createElection, now)
+        resp = contract.definitions.LinksResponse(
+          Vector(
+            Links(
+              show"/api/v1/election/admin/$titleMangled/$token",
+              "election-view-admin",
+              Links.Method.Get,
+              Vector(Links.Parameters("titleMangled", titleMangled), Links.Parameters("token", token)),
+            ),
+          ),
+        )
+      } yield respond.Created(resp)
+    }
+  }
 
   private val serviceV1 = {
-    val Http4sDslTask: Http4sDsl[Task] = Http4sDsl[Task]
+    val Http4sDslTask = Http4sDsl[Task]
     import Http4sDslTask._
 
     HttpRoutes.of[Task] {
@@ -194,7 +228,7 @@ class Http(voting: Voting, clock: Clock.Service) {
   }
 
   val httpApp: HttpApp[Task] =
-    Router("/v1" -> serviceV1).orNotFound
+    Router("/v1" -> serviceV1, "/" -> new contract.Resource[Task]().routes(serviceV1handler)).orNotFound
 
 }
 
@@ -316,9 +350,16 @@ object Http {
     implicit lazy val decoder: Decoder[Error] = deriveDecoder
   }
 
-  def make(voting: Voting, clock: Clock.Service): Http = new Http(voting, clock)
+  def make(voting: Voting): URIO[Has[Voting] with Has[Blocking.Service] with Has[Clock.Service], Http] = for {
+    clock <- ZIO.service[Clock.Service]
+    runtime <- ZIO.runtime[Has[Blocking.Service] with Has[Clock.Service]]
+  } yield new Http(voting, clock)(runtime)
 
-  val layer: URLayer[Has[Voting] with Has[Clock.Service], Has[Http]] =
-    (make _).toLayer
+  val layer: URLayer[Has[Voting] with Has[Blocking.Service] with Has[Clock.Service], Has[Http]] = {
+    for {
+      voting <- ZIO.service[Voting]
+      http <- make(voting)
+    } yield http
+  }.toLayer
 
 }
