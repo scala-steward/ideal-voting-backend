@@ -47,19 +47,18 @@ lazy val OpenApiHelpers = new {
     }
   }
 
-  def generateOpenApiDoc(crossTargetValue: File, openapiSourceDir: File): Int = {
+  def generateOpenApiDoc(outDir: File, openapiSourceDir: File): Int = {
     import java.nio.file.Files
     import scala.sys.process._
     import scala.util.Using
     val openapiFiles = discoverFilesRelative(openapiSourceDir, isOpenApiSpec)
-    val outDir = crossTargetValue / "openapi"
     Files.createDirectories(outDir.toPath)
     def command(openapiFile: File) = {
       val openapiFilePath = openapiFile.getPath
       val withoutExtension = dropExtension(openapiFile)
       val outDirIndividual = outDir / withoutExtension
       Files.createDirectories(outDirIndividual.toPath)
-      s"docker --config $crossTargetValue/dockerLocalConfig run --rm -v $outDirIndividual:/out -v $openapiSourceDir:/openapis openapitools/openapi-generator-cli:v5.2.1 generate -i /openapis/$openapiFilePath -g html -o /out"
+      s"docker run --rm -v $outDirIndividual:/out -v $openapiSourceDir:/openapis openapitools/openapi-generator-cli:v5.2.1 generate -i /openapis/$openapiFilePath -g html -o /out"
     }
     val result = openapiFiles.map(command(_) !).sum
     val items = openapiFiles.map { file =>
@@ -117,14 +116,14 @@ lazy val idealVotingContract = project
     generateOpenApiDocTask := {
       val crossTargetValue = crossTarget.value
       val openapiSourceDir = (Compile / sourceDirectory).value / "openapi"
-      val openapiResult = OpenApiHelpers.generateOpenApiDoc(crossTargetValue, openapiSourceDir)
+      val openapiResult = OpenApiHelpers.generateOpenApiDoc(new File(s"$crossTargetValue-openapi"), openapiSourceDir)
       if (openapiResult != 0) {
         sys.error("openapi-generator-cli html failed")
       }
     },
     Compile / packageDoc / mappings ++= {
       val crossTargetValue = crossTarget.value
-      val openapiBase = crossTargetValue / "openapi"
+      val openapiBase = new File(s"$crossTargetValue-openapi")
       val openapiFiles =
         OpenApiHelpers.discoverFilesRelative(openapiBase, _ => true).map(f => (file(s"$openapiBase/$f"), s"openapi/$f"))
       openapiFiles
