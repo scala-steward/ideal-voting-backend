@@ -14,6 +14,8 @@ object Dependencies {
     val logbackJackson = "0.1.5"
     val logbackJson = "0.1.5"
     val mariadb = "2.7.5"
+    val monocle = "3.1.0"
+    val pprint = "0.7.1"
     val snakeyaml = "1.30"
     val zio = "1.0.13"
     val zioDoobie = "0.2.0"
@@ -41,6 +43,8 @@ object Dependencies {
   val logbackJackson = "ch.qos.logback.contrib" % "logback-jackson" % Versions.logbackJackson
   val logbackJson = "ch.qos.logback.contrib" % "logback-json-classic" % Versions.logbackJson
   val mariadb = "org.mariadb.jdbc" % "mariadb-java-client" % Versions.mariadb
+  val monocle = "dev.optics" %% "monocle-macro" % Versions.monocle
+  val pprint = "com.lihaoyi" %% "pprint" % Versions.pprint
   val snakeyaml = "org.yaml" % "snakeyaml" % Versions.snakeyaml
   val zioDoobieLiquibase = "com.github.sideeffffect" %% "zio-doobie-liquibase" % Versions.zioDoobie
   val zioLoggingSlf4j = "dev.zio" %% "zio-logging-slf4j" % Versions.zioLoggingSlf4j

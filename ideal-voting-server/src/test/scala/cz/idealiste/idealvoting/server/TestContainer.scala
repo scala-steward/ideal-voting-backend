@@ -3,6 +3,7 @@ package cz.idealiste.idealvoting.server
 import cats.implicits._
 import com.dimafeng.testcontainers.DockerComposeContainer._
 import com.dimafeng.testcontainers.{DockerComposeContainer, ExposedService}
+import monocle.syntax.all._
 import zio._
 import zio.blocking.Blocking
 import zio.logging.{Logger, Logging}
@@ -22,14 +23,13 @@ object TestContainer {
       ),
     ).toLayer
 
-  def make(docker: DockerComposeContainer, config: Config, logger: Logger[String]): UIO[Config] =
-    docker
-      .getHostAndPort("mariadb_1")(3306)
-      .flatMap { case (host, port) =>
-        val c = config.copy(dbTransactor = config.dbTransactor.copy(url = show"jdbc:mariadb://$host:$port/idealvoting"))
-        logger.info(s"Modified test configuration: $c.").as(c)
-      }
-      .orDie
+  def make(docker: DockerComposeContainer, config: Config, logger: Logger[String]): UIO[Config] = {
+    for {
+      (host, port) <- docker.getHostAndPort("mariadb_1")(3306).orDie
+      c = config.focus(_.dbTransactor.url).replace(show"jdbc:mariadb://$host:$port/idealvoting")
+      _ <- logger.info(s"Modified test configuration:\n${pprint.PPrinter.BlackWhite(c)}.")
+    } yield c
+  }
 
   lazy val layer: URLayer[Has[Config] with Has[DockerComposeContainer] with Logging, Has[Config]] = (
     for {

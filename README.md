@@ -12,6 +12,10 @@ To start the server:
 
 ## API
 
+[![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases]
+
+[Documentation](https://s01.oss.sonatype.org/service/local/repositories/releases/archive/cz/idealiste/ideal-voting-contract_2.13/0.0.16/ideal-voting-contract_2.13-0.0.16-javadoc.jar/!/openapi/index.html)
+
 ### Create election
 
 `/v1/election` `POST`
@@ -118,3 +122,6 @@ Example response:
 
 [Link-GitHubActions]: https://github.com/Idealiste-cz/ideal-voting-backend/actions/workflows/release.yml?query=branch%3Amaster "GitHub Actions link"
 [Badge-GitHubActions]: https://github.com/Idealiste-cz/ideal-voting-backend/actions/workflows/release.yml/badge.svg "GitHub Actions badge"
+
+[Link-SonatypeReleases]: https://oss.sonatype.org/content/repositories/releases/cz/idealiste/ideal-voting-contract_2.13/ "Sonatype Releases link"
+[Badge-SonatypeReleases]: https://maven-badges.herokuapp.com/maven-central/cz.idealiste/ideal-voting-contract_2.13/badge.svg "Sonatype Releases badge"

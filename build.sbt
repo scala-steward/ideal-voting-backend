@@ -58,7 +58,7 @@ lazy val OpenApiHelpers = new {
       val withoutExtension = dropExtension(openapiFile)
       val outDirIndividual = outDir / withoutExtension
       Files.createDirectories(outDirIndividual.toPath)
-      s"docker run --rm -v $outDirIndividual:/out -v $openapiSourceDir:/openapis openapitools/openapi-generator-cli:v5.2.1 generate -i /openapis/$openapiFilePath -g html -o /out"
+      s"docker run --rm -v $outDirIndividual:/out -v $openapiSourceDir:/openapis openapitools/openapi-generator-cli:v5.2.1 generate -i /openapis/$openapiFilePath -g html2 -o /out"
     }
     val result = openapiFiles.map(command(_) !).sum
     val items = openapiFiles.map { file =>
@@ -170,6 +170,8 @@ lazy val idealVotingServer = project
       Dependencies.zioLoggingSlf4j,
       Dependencies.zioMagic,
       // Test
+      Dependencies.monocle % Test,
+      Dependencies.pprint % Test,
       Dependencies.zioTest % Test,
       Dependencies.zioTestcontainers % Test,
       Dependencies.zioTestSbt % Test,
@@ -219,5 +221,5 @@ addCommandAlias(
 )
 addCommandAlias(
   "cipublish",
-  "; check; idealVotingContract/versionCheck; +Test/doc; +idealVotingContract/generateOpenApiDoc; ci-release; +publishLocal",
+  "; check; idealVotingContract/versionCheck; +idealVotingContract/generateOpenApiDoc; ci-release",
 )
