@@ -114,16 +114,16 @@ lazy val idealVotingContract = project
       }
     },
     generateOpenApiDocTask := {
-      val crossTargetValue = crossTarget.value
+      val baseDirectoryValue = baseDirectory.value
       val openapiSourceDir = (Compile / sourceDirectory).value / "openapi"
-      val openapiResult = OpenApiHelpers.generateOpenApiDoc(new File(s"$crossTargetValue-openapi"), openapiSourceDir)
+      val openapiResult = OpenApiHelpers.generateOpenApiDoc(baseDirectoryValue / "target-openapi", openapiSourceDir)
       if (openapiResult != 0) {
         sys.error("openapi-generator-cli html failed")
       }
     },
     Compile / packageDoc / mappings ++= {
-      val crossTargetValue = crossTarget.value
-      val openapiBase = new File(s"$crossTargetValue-openapi")
+      val baseDirectoryValue = baseDirectory.value
+      val openapiBase = baseDirectoryValue / "target-openapi"
       val openapiFiles =
         OpenApiHelpers.discoverFilesRelative(openapiBase, _ => true).map(f => (file(s"$openapiBase/$f"), s"openapi/$f"))
       openapiFiles
