@@ -14,7 +14,7 @@ To start the server:
 
 [![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases]
 
-[Documentation](https://s01.oss.sonatype.org/service/local/repositories/releases/archive/cz/idealiste/ideal-voting-contract_2.13/0.0.16/ideal-voting-contract_2.13-0.0.16-javadoc.jar/!/openapi/index.html)
+[Documentation](https://s01.oss.sonatype.org/service/local/repositories/releases/archive/cz/idealiste/ideal-voting-contract_2.13/0.0.18/ideal-voting-contract_2.13-0.0.18-javadoc.jar/!/openapi/index.html)
 
 ### Create election
 

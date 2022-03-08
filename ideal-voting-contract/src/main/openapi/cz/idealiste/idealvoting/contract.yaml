@@ -3,11 +3,12 @@ info:
   title: IDEALvoting server
   description: >
     This is IDEALvoting server
-  version: 1.0.0
+  version: "1"
 servers:
   - url: /api/v1
 components:
   schemas:
+
     CreateElectionRequest:
       type: object
       required: [ title, admin, options, voters ]
@@ -21,7 +22,27 @@ components:
             type: object
             required: [ title ]
             properties: { title: { type: string, example: "Option A" }, description: { type: string, example: "This is option A" } }
-        voters: { type: array, items: { type: string, format: email, example: "Bob <bob@mail.com>" } }
+        voters: { type: array, items: { type: string, format: email, example: "Bob &lt;bob@mail.com&gt;" } }
+      example:
+        {
+          "title": "My Election",
+          "description": "Election description", # optional
+          "admin": "john.doe@gmail.com",
+          "options": [
+            {
+              "title": "Option A",
+              "description": "This is option A" # optional
+            },
+            {
+              "title": "Option B",
+              "description": "This is option B" # optional
+            }
+          ],
+          "voters": [
+            "alice@yahoo.com",
+            "Bob &lt;bob@mail.com&gt;"
+          ]
+        }
 
     LinksResponse:
       type: object
@@ -44,6 +65,20 @@ components:
                   properties:
                     key: { type: string, example: "titleMangled" }
                     value: { type: string, example: "my-election" }
+      example:
+        {
+          "links": [
+            {
+              "href": "/v1/election/admin/my-election/asdfasdfasdf",
+              "rel": "election-view-admin",
+              "method": "GET",
+              "parameters": {
+                "titleMangled": "my-election",
+                "token": "asdfasdfasdf"
+              }
+            }
+          ]
+        }
 
 paths:
   /election:
@@ -62,26 +97,6 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/CreateElectionRequest' }
-            example:
-              {
-                "title": "My Election",
-                "description": "Election description", # optional
-                "admin": "john.doe@gmail.com",
-                "options": [
-                  {
-                    "title": "Option A",
-                    "description": "This is option A" # optional
-                  },
-                  {
-                    "title": "Option B",
-                    "description": "This is option B" # optional
-                  }
-                ],
-                "voters": [
-                  "alice@yahoo.com",
-                  "Bob <bob@mail.com>"
-                ]
-              }
       responses:
         '201':
           description:
@@ -89,17 +104,3 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LinksResponse' }
-              example:
-                {
-                  "links": [
-                    {
-                      "href": "/v1/election/admin/my-election/asdfasdfasdf",
-                      "rel": "election-view-admin",
-                      "method": "GET",
-                      "parameters": {
-                        "titleMangled": "my-election",
-                        "token": "asdfasdfasdf"
-                      }
-                    }
-                  ]
-                }
