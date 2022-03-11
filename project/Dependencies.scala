@@ -4,6 +4,7 @@ object Dependencies {
 
   object Versions {
 
+    val chimney = "0.6.1"
     val circe = "0.14.1"
     val commonsLang = "3.12.0"
     val emil = "0.11.2"
@@ -29,6 +30,7 @@ object Dependencies {
     val zioMagicComments = "0.1.0"
   }
 
+  val chimney = "io.scalaland" %% "chimney-cats" % Versions.chimney
   val circeGeneric = "io.circe" %% "circe-generic" % Versions.circe
   val circeParser = "io.circe" %% "circe-parser" % Versions.circe
   val commonsLang = "org.apache.commons" % "commons-lang3" % Versions.commonsLang

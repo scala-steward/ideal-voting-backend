@@ -7,7 +7,28 @@ info:
 servers:
   - url: /api/v1
 components:
+
   schemas:
+
+    BadRequestResponse:
+      description: Optional information about how the request was bad.
+      type: object
+      required: [ message ]
+      properties:
+        message:
+          description: >-
+            A text message, presented primarily for dev/qa/troubleshooting purposes.
+          type: string
+
+    NotFoundResponse:
+      description: Not found.
+      type: object
+      required: [ message ]
+      properties:
+        message:
+          description: >-
+            A text message, presented primarily for dev/qa/troubleshooting purposes.
+          type: string
 
     CreateElectionRequest:
       type: object
@@ -23,26 +44,40 @@ components:
             required: [ title ]
             properties: { title: { type: string, example: "Option A" }, description: { type: string, example: "This is option A" } }
         voters: { type: array, items: { type: string, format: email, example: "Bob &lt;bob@mail.com&gt;" } }
-      example:
-        {
-          "title": "My Election",
-          "description": "Election description", # optional
-          "admin": "john.doe@gmail.com",
-          "options": [
-            {
-              "title": "Option A",
-              "description": "This is option A" # optional
-            },
-            {
-              "title": "Option B",
-              "description": "This is option B" # optional
-            }
-          ],
-          "voters": [
-            "alice@yahoo.com",
-            "Bob &lt;bob@mail.com&gt;"
-          ]
-        }
+      example: {
+        "title": "My Election",
+        "description": "Election description", # optional
+        "admin": "john.doe@gmail.com",
+        "options": [
+          {
+            "title": "Option A",
+            "description": "This is option A" # optional
+          },
+          {
+            "title": "Option B",
+            "description": "This is option B" # optional
+          }
+        ],
+        "voters": [
+          "alice@yahoo.com",
+          "Bob &lt;bob@mail.com&gt;"
+        ]
+      }
+
+    GetElectionAdminResponse:
+      type: object
+      required: [ title, titleMangled, started, admin, token, options, voters, links ]
+      properties:
+        title: { type: string, example: "My Election" }
+        titleMangled: { type: string, example: "my-election" }
+        description: { type: string, example: "Election description" }
+        started: { type: string, format: date-time, example: "2018-11-13T20:20:39+00:00Z" }
+        admin: { type: string, format: email, example: "john.doe@gmail.com" }
+        token: { type: string, example: "asdfasdfasdf" }
+        options: { type: array, items: { $ref: '#/components/schemas/GetOptionResponse' } }
+        voters: { type: array, items: { $ref: '#/components/schemas/GetVoterResponse' } }
+        result: { $ref: '#/components/schemas/GetResultResponse' }
+        links: { $ref: '#/components/schemas/LinksResponse' }
 
     LinksResponse:
       type: object
@@ -65,20 +100,48 @@ components:
                   properties:
                     key: { type: string, example: "titleMangled" }
                     value: { type: string, example: "my-election" }
-      example:
-        {
-          "links": [
-            {
-              "href": "/v1/election/admin/my-election/asdfasdfasdf",
-              "rel": "election-view-admin",
-              "method": "GET",
-              "parameters": {
-                "titleMangled": "my-election",
-                "token": "asdfasdfasdf"
-              }
+      example: {
+        "links": [
+          {
+            "href": "/v1/election/admin/my-election/asdfasdfasdf",
+            "rel": "election-view-admin",
+            "method": "GET",
+            "parameters": {
+              "titleMangled": "my-election",
+              "token": "asdfasdfasdf"
             }
-          ]
-        }
+          }
+        ]
+      }
+
+    GetOptionResponse:
+      type: object
+      required: [ id, title ]
+      properties:
+        id: { type: number, example: 1 }
+        title: { type: string, example: "Option A" }
+        description: { type: string, example: "This is option A" }
+
+    GetVoterResponse:
+      type: object
+      required: [ voter, voted ]
+      properties:
+        email: { type: string, format: email, example: "Bob &lt;bob@mail.com&gt;" }
+        voted: { type: boolean }
+
+    GetResultResponse:
+      type: object
+      required: [ ended, positions, votes ]
+      properties:
+        ended: { type: string, format: date-time, example: "2018-11-13T20:20:39+00:00Z" }
+        positions: { type: array, items: { type: number } }
+        votes:
+          type: array
+          items:
+            type: object
+            required: [ preferences ]
+            properties:
+              preferences: { type: array, items: { type: number } }
 
 paths:
   /election:
@@ -100,7 +163,50 @@ paths:
       responses:
         '201':
           description:
-            Election has been successfully created.
+            New election has been successfully created.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LinksResponse' }
+        '400':
+          description:
+            Malformed admin or voters emails.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BadRequestResponse' }
+
+  /election/admin/{titleMangled}/{token}:
+    get:
+      description: >
+        Returns the administrative view of the election
+      operationId: getElectionAdmin
+      parameters:
+        - name: titleMangled
+          description: mangled title of the election
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          description: the token to get the admin view of the election
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Correlation-Id
+          in: header
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description:
+            Administrative view of the election.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GetElectionAdminResponse' }
+        '404':
+          description:
+            Election for the given token hasn't been found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotFoundResponse' }

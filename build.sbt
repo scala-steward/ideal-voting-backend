@@ -155,6 +155,7 @@ lazy val idealVotingServer = project
     name := "ideal-voting-server",
     Compile / mainClass := Some("cz.idealiste.idealvoting.server.Main"),
     libraryDependencies ++= List(
+      Dependencies.chimney,
       Dependencies.circeGeneric,
       Dependencies.circeParser,
       Dependencies.commonsLang,
