@@ -1,6 +1,7 @@
 package cz.idealiste.idealvoting.server
 
 import cz.idealiste.ideal.voting.server
+import monocle.Monocle._
 import pprint.PPrinter.BlackWhite
 import zio._
 import zio.config._
@@ -27,7 +28,8 @@ object Config {
       cmd = ConfigSource.fromCommandLineArgs(args)
       source = cmd <> env <> typesafe
       config <- read(implicitly[ConfigDescriptor[Config]].from(source)).orDie
-      () <- logger.info(s"${server.BuildInfo}, configuration:\n${BlackWhite(config)}")
+      configSanitized = config.focus(_.dbTransactor.password).replace("******")
+      () <- logger.info(s"${server.BuildInfo}, configuration:\n${BlackWhite(configSanitized)}")
     } yield config
   ).toLayer
 }
