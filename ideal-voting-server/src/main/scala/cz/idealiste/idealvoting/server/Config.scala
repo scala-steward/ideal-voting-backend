@@ -1,12 +1,13 @@
 package cz.idealiste.idealvoting.server
 
+import cz.idealiste.ideal.voting.server
+import pprint.PPrinter.BlackWhite
 import zio._
 import zio.config._
 import zio.config.magnolia.DeriveConfigDescriptor
 import zio.config.typesafe._
 import zio.doobie.liquibase._
-import zio.logging.{Logger, Logging}
-import zio.system.System
+import zio.logging.Logger
 
 final case class Config(
     dbTransactor: ZIODoobieLiquibase.Config,
@@ -18,21 +19,15 @@ object Config {
 
   implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
 
-  def make(args: List[String], logger: Logger[String]): URIO[System, Config] = {
-    val typesafe = TypesafeConfigSource.fromResourcePath
-    val env = ConfigSource.fromSystemEnv()
-    val cmd = ConfigSource.fromCommandLineArgs(args)
-    val source = cmd <> env <> typesafe
-    for {
-      config <- read(implicitly[ConfigDescriptor[Config]].from(source))
-      () <- logger.info(s"${cz.idealiste.ideal.voting.server.BuildInfo}, configuration: $config")
-    } yield config
-  }.orDie
-
-  def layer(args: List[String]): URLayer[System with Logging, Has[Config]] = (
+  private[server] def layer(args: List[String]) = (
     for {
       logger <- ZIO.service[Logger[String]]
-      config <- make(args, logger)
+      typesafe = TypesafeConfigSource.fromResourcePath
+      env = ConfigSource.fromSystemEnv()
+      cmd = ConfigSource.fromCommandLineArgs(args)
+      source = cmd <> env <> typesafe
+      config <- read(implicitly[ConfigDescriptor[Config]].from(source)).orDie
+      () <- logger.info(s"${server.BuildInfo}, configuration:\n${BlackWhite(config)}")
     } yield config
   ).toLayer
 }

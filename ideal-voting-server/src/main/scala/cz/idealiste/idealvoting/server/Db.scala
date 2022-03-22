@@ -10,12 +10,11 @@ import doobie.implicits.javatimedrivernative._
 import emil.MailAddress
 import emil.doobie.EmilDoobieMeta._
 import zio._
-import zio.doobie.liquibase.ZIODoobieLiquibase
 import zio.interop.catz._
 
 import java.time.OffsetDateTime
 
-class Db(transactor: Transactor[Task]) {
+final case class Db(transactor: Transactor[Task]) {
 
   private implicit lazy val mailAddressRead: Read[MailAddress] = mailAddressMulticolumnRead
   private implicit lazy val mailAddressWrite: Write[MailAddress] = mailAddressMulticolumnWrite
@@ -214,14 +213,10 @@ class Db(transactor: Transactor[Task]) {
 
 object Db {
 
-  def make(transactor: Transactor[Task]): Db = new Db(transactor)
-
-  val layer: URLayer[Has[Transactor[Task]], Has[Db]] =
-    (make _).toLayer
+  private[server] val layer = (apply _).toLayer
 
   object Transactor {
-    val layer: RLayer[Has[server.Config], Has[ZIODoobieLiquibase.Config]] =
-      ZIO.service[server.Config].map(_.dbTransactor).toLayer
+    private[server] val layer = ZIO.service[server.Config].map(_.dbTransactor).toLayer
   }
 
 }

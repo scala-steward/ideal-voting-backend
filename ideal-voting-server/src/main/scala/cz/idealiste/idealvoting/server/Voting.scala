@@ -16,7 +16,7 @@ import zio.random.Random
 import java.time.OffsetDateTime
 import scala.collection.immutable.SortedSet
 
-class Voting(
+final case class Voting(
     config: Config,
     db: Db,
     votingSystem: VotingSystem,
@@ -227,24 +227,11 @@ object Voting {
     final case object SuccessfullyEnded extends EndElectionResult
   }
 
-  def make(
-      config: Config,
-      db: Db,
-      votingSystem: VotingSystem,
-      logger: Logger[String],
-      random: Random.Service,
-  ): Voting =
-    new Voting(config, db, votingSystem, logger, random)
-
-  val layer: URLayer[
-    Has[Config] with Has[Db] with Has[VotingSystem] with Has[Logger[String]] with Has[Random.Service],
-    Has[Voting],
-  ] =
-    (make _).toLayer
+  private[server] val layer = (apply _).toLayer
 
   final case class Config(tokenLength: Int = 10)
   object Config {
-    val layer: RLayer[Has[server.Config], Has[Config]] = ZIO.service[server.Config].map(_.voting).toLayer
+    private[server] val layer = ZIO.service[server.Config].map(_.voting).toLayer
     implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
   }
 }

@@ -25,7 +25,9 @@ import zio.interop.catz._
 
 import java.time.OffsetDateTime
 
-class Http(voting: Voting, clock: Clock.Service)(implicit r: Runtime[Has[Blocking.Service] with Has[Clock.Service]]) {
+final case class Http(voting: Voting, clock: Clock.Service)(implicit
+    r: Runtime[Has[Blocking.Service] with Has[Clock.Service]],
+) {
 
   private object serviceV1handler extends contract.Handler[Task] {
 
@@ -417,16 +419,13 @@ object Http {
     implicit lazy val decoder: Decoder[Error] = deriveDecoder
   }
 
-  def make(voting: Voting): URIO[Has[Voting] with Has[Blocking.Service] with Has[Clock.Service], Http] = for {
-    clock <- ZIO.service[Clock.Service]
-    runtime <- ZIO.runtime[Has[Blocking.Service] with Has[Clock.Service]]
-  } yield new Http(voting, clock)(runtime)
-
-  val layer: URLayer[Has[Voting] with Has[Blocking.Service] with Has[Clock.Service], Has[Http]] = {
+  private[server] val layer = (
     for {
+      clock <- ZIO.service[Clock.Service]
+      runtime <- ZIO.runtime[Has[Blocking.Service] with Has[Clock.Service]]
       voting <- ZIO.service[Voting]
-      http <- make(voting)
+      http = Http(voting, clock)(runtime)
     } yield http
-  }.toLayer
+  ).toLayer
 
 }

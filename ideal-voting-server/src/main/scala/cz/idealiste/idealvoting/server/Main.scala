@@ -16,9 +16,7 @@ object Main extends App {
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
     serverLayer(args).build.useForever.exitCode
 
-  def serverLayer(
-      args: List[String],
-  ): RLayer[Blocking with Clock with Random with System, Has[Server]] =
+  private[server] def serverLayer(args: List[String]) =
     ZLayer.fromSomeMagic[Blocking with Clock with Random with System, Has[Server]](
       Slf4jLogger.make((_, s) => s),
       Config.layer(args),
@@ -27,7 +25,7 @@ object Main extends App {
       HttpServer.layer,
     )
 
-  lazy val httpLayer: RLayer[Blocking with Clock with Random with Has[Config] with Logging, Has[Http]] =
+  private[server] lazy val httpLayer =
     ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config] with Logging, Has[Http]](
       Db.Transactor.layer,
       ZIODoobieLiquibase.layer,
