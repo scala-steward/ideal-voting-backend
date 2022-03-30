@@ -2,7 +2,7 @@ package cz.idealiste.idealvoting.server
 
 import cats.implicits._
 import com.dimafeng.testcontainers.DockerComposeContainer
-import cz.idealiste.idealvoting.server.Http._
+import cz.idealiste.idealvoting.server.HttpLive._
 import emil.MailAddress
 import emil.javamail.syntax._
 import org.http4s.circe.CirceEntityCodec._

@@ -13,7 +13,7 @@ import zio.logging.Logger
 final case class Config(
     dbTransactor: ZIODoobieLiquibase.Config,
     httpServer: HttpServer.Config,
-    voting: Voting.Config,
+    voting: VotingLive.Config,
 )
 
 object Config {

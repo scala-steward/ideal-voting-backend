@@ -27,12 +27,12 @@ object Main extends App {
 
   private[server] lazy val httpLayer =
     ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config] with Logging, Has[Http]](
-      Db.Transactor.layer,
+      DbDoobie.Transactor.layer,
       ZIODoobieLiquibase.layer,
-      Db.layer,
-      VotingSystem.layer,
-      Voting.Config.layer,
-      Voting.layer,
-      Http.layer,
+      DbDoobie.layer,
+      VotingSystemDummy.layer,
+      VotingLive.Config.layer,
+      VotingLive.layer,
+      HttpLive.layer,
     )
 }
