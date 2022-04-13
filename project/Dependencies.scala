@@ -21,7 +21,7 @@ object Dependencies {
     val zio = "1.0.14"
     val zioDoobie = "0.2.0"
     val zioLoggingSlf4j = "0.5.14"
-    val zioMagic = "0.3.11"
+    val zioMagic = "0.3.12"
 
     // Test
     val zioTestcontainers = "0.3.0"
