@@ -19,7 +19,7 @@ object Dependencies {
     val pprint = "0.7.3"
     val snakeyaml = "1.30"
     val zio = "1.0.14"
-    val zioDoobie = "0.2.0"
+    val zioDoobie = "0.3.0"
     val zioLoggingSlf4j = "0.5.14"
     val zioMagic = "0.3.12"
 
