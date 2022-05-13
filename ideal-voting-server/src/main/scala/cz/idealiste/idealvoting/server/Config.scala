@@ -28,7 +28,7 @@ object Config {
       cmd = ConfigSource.fromCommandLineArgs(args)
       source = cmd <> env <> typesafe
       config <- read(implicitly[ConfigDescriptor[Config]].from(source)).orDie
-      configSanitized = config.focus(_.dbTransactor.password).replace("******")
+      configSanitized = config.focus(_.dbTransactor.hikari.password).replace(Some("******"))
       () <- logger.info(s"${server.BuildInfo}, configuration:\n${BlackWhite(configSanitized)}")
     } yield config
   ).toLayer

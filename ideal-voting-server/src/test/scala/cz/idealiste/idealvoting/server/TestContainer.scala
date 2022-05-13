@@ -30,7 +30,7 @@ object TestContainer {
       config0 <- ZIO.service[Config]
       logger <- ZIO.service[Logger[String]]
       (host, port) <- docker.getHostAndPort("mariadb_1")(3306).orDie
-      config = config0.focus(_.dbTransactor.url).replace(show"jdbc:mariadb://$host:$port/idealvoting")
+      config = config0.focus(_.dbTransactor.hikari.jdbcUrl).replace(Some(show"jdbc:mariadb://$host:$port/idealvoting"))
       _ <- logger.info(s"Modified test configuration:\n${BlackWhite(config)}.")
     } yield config
   ).toLayer
