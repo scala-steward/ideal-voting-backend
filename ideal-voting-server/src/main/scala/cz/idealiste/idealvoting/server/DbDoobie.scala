@@ -214,7 +214,7 @@ final case class DbDoobie(transactor: Transactor[Task]) extends Db {
 
 object DbDoobie {
 
-  private[server] val layer = upcastLayer[Db]((apply _).toLayer)
+  private[server] val layer = (apply _).toLayer[Db]
 
   object Transactor {
     private[server] val layer = ZIO.service[server.Config].map(_.dbTransactor).toLayer

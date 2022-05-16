@@ -8,5 +8,5 @@ final case class VotingSystemDummy() extends VotingSystem {
 
 object VotingSystemDummy {
 
-  private[server] val layer = upcastLayer[VotingSystem]((apply _).toLayer)
+  private[server] val layer = (apply _).toLayer[VotingSystem]
 }

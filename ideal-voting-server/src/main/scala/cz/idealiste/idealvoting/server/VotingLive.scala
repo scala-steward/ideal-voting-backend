@@ -126,7 +126,7 @@ final case class VotingLive(
 
 object VotingLive {
 
-  private[server] val layer = upcastLayer[Voting]((apply _).toLayer)
+  private[server] val layer = (apply _).toLayer[Voting]
 
   final case class Config(tokenLength: Int = 10)
   object Config {
