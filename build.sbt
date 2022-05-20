@@ -29,8 +29,8 @@ lazy val OpenApiHelpers = new {
   }
 
   def discoverFilesRelative(base: File, predicate: File => Boolean): List[File] = {
-    def recursiveListFiles(f: File): Array[File] = {
-      val these = f.listFiles
+    def recursiveListFiles(f: File): List[File] = {
+      val these = Option(f.listFiles).toList.flatten
       these.filter(f => f.isFile && predicate(f)) ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
     }
     recursiveListFiles(base).flatMap(_.relativeTo(base)).toList
@@ -128,7 +128,8 @@ lazy val idealVotingContract = project
         OpenApiHelpers.discoverFilesRelative(openapiBase, _ => true).map(f => (file(s"$openapiBase/$f"), s"openapi/$f"))
       openapiFiles
     },
-    ThisBuild / versionPolicyIntention := Compatibility.BinaryCompatible,
+//    ThisBuild / versionPolicyIntention := Compatibility.BinaryCompatible,
+    ThisBuild / versionPolicyIntention := Compatibility.None,
     ThisBuild / versionPolicyIgnoredInternalDependencyVersions := Some("^\\d+\\.\\d+\\.\\d+\\+\\d+".r),
     mimaBinaryIssueFilters ++= List(
       ProblemFilters.exclude[DirectMissingMethodProblem]("*.apply"),
@@ -160,6 +161,7 @@ lazy val idealVotingServer = project
       Dependencies.circeParser,
       Dependencies.commonsLang,
       Dependencies.emil,
+      Dependencies.http4sServerBlaze,
       Dependencies.jackson,
       Dependencies.liquibaseSlf4j % "runtime",
       Dependencies.logback,

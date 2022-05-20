@@ -21,18 +21,20 @@ object Main extends App {
       Slf4jLogger.make((_, s) => s),
       Config.layer(args),
       httpLayer,
-      HttpServer.Config.layer,
-      HttpServer.layer,
+      HttpServerBlaze.Config.layer,
+      HttpServerBlaze.layer,
+      HttpServer.Server.layer,
     )
 
   private[server] lazy val httpLayer =
-    ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config] with Logging, Has[Http]](
+    ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config] with Logging, Has[HttpApp]](
       DbDoobie.Transactor.layer,
       ZIODoobieLiquibase.layer,
       DbDoobie.layer,
       VotingSystemDummy.layer,
       VotingLive.Config.layer,
       VotingLive.layer,
-      HttpLive.layer,
+      HandlerLive.layer,
+      HttpAppLive.layer,
     )
 }

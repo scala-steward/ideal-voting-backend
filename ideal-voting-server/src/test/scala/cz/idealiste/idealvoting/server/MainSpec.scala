@@ -2,7 +2,7 @@ package cz.idealiste.idealvoting.server
 
 import cats.implicits._
 import com.dimafeng.testcontainers.DockerComposeContainer
-import cz.idealiste.idealvoting.server.HttpLive._
+import cz.idealiste.idealvoting.server.HandlerLive._
 import emil.MailAddress
 import emil.javamail.syntax._
 import org.http4s.circe.CirceEntityCodec._
@@ -32,7 +32,7 @@ object MainSpec extends DefaultRunnableSpec {
     suite("Service")(
       testM("/status should return OK") {
         val response =
-          ZIO.serviceWith[Http](_.httpApp.run(Request(method = Method.GET, uri = uri"/v1/status")))
+          ZIO.serviceWith[HttpApp](_.httpApp.run(Request(method = Method.GET, uri = uri"/v1/status")))
         assertM(response.map(_.status))(equalTo(Status.Ok))
       },
       testM("/election POST should create an election") {
@@ -43,7 +43,7 @@ object MainSpec extends DefaultRunnableSpec {
           List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", Some("Option 2"))),
           List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
         )
-        val response = ZIO.serviceWith[Http] { http =>
+        val response = ZIO.serviceWith[HttpApp] { http =>
           val httpApp = http.httpApp
           for {
             response <- httpApp.run(
@@ -114,7 +114,7 @@ object MainSpec extends DefaultRunnableSpec {
           List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
         )
         val requestCast = CastVoteRequest(List(1, 0))
-        val responseViewAdmin = ZIO.serviceWith[Http] { http =>
+        val responseViewAdmin = ZIO.serviceWith[HttpApp] { http =>
           val httpApp = http.httpApp
           for {
             responseCreate <- httpApp
@@ -167,7 +167,7 @@ object MainSpec extends DefaultRunnableSpec {
           List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
         )
         val requestCast = CastVoteRequest(List(1, 0))
-        val responseResult = ZIO.serviceWith[Http] { http =>
+        val responseResult = ZIO.serviceWith[HttpApp] { http =>
           val httpApp = http.httpApp
           for {
             responseCreate <- httpApp
@@ -212,8 +212,8 @@ object MainSpec extends DefaultRunnableSpec {
       TestContainer.dockerCompose,
     ) >+> TestContainer.layer
 
-  lazy val testLayer: RLayer[Blocking with Random with System, Has[Http]] =
-    ZLayer.fromSomeMagic[Blocking with Random with System, Has[Http]](
+  lazy val testLayer: RLayer[Blocking with Random with System, Has[HttpApp]] =
+    ZLayer.fromSomeMagic[Blocking with Random with System, Has[HttpApp]](
       Clock.live,
       testLayerConfig,
       Main.httpLayer,

@@ -2,10 +2,10 @@ package cz.idealiste.idealvoting.server
 
 import cats.data.ValidatedNec
 import cats.implicits._
+import cz.idealiste.idealvoting.contract
 import cz.idealiste.idealvoting.contract.definitions.LinksResponse.Links
-import cz.idealiste.idealvoting.server.HttpLive._
+import cz.idealiste.idealvoting.server.HandlerLive._
 import cz.idealiste.idealvoting.server.Voting._
-import cz.idealiste.idealvoting.{contract, server}
 import emil.MailAddress
 import emil.javamail.syntax._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
@@ -16,8 +16,6 @@ import io.scalaland.chimney.{TransformationError, Transformer, TransformerF}
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.dsl.Http4sDsl
-import org.http4s.implicits._
-import org.http4s.server.Router
 import zio._
 import zio.blocking.Blocking
 import zio.clock.Clock
@@ -25,81 +23,78 @@ import zio.interop.catz._
 
 import java.time.OffsetDateTime
 
-final case class HttpLive(voting: Voting, clock: Clock.Service)(implicit
+final case class HandlerLive(voting: Voting, clock: Clock.Service)(implicit
     r: Runtime[Has[Blocking.Service] with Has[Clock.Service]],
-) extends server.Http {
+) extends Handler {
 
-  private object serviceV1handler extends contract.Handler[Task] {
-
-    override def createElection(respond: contract.Resource.CreateElectionResponse.type)(
-        body: contract.definitions.CreateElectionRequest,
-        xCorrelationId: String,
-    ): Task[contract.Resource.CreateElectionResponse] =
-      body.validateAs[CreateElection] match {
-        case Right(body) =>
-          for {
-            now <- clock.currentDateTime
-            (titleMangled, token) <- voting.createElection(body, now)
-            links = Vector(
-              Links(
-                show"/api/v1/election/admin/$titleMangled/$token",
-                "getElectionAdmin",
-                Links.Method.Get,
-                Vector(Links.Parameters("titleMangled", titleMangled), Links.Parameters("token", token)),
-              ),
-            )
-            resp = contract.definitions.LinksResponse(links)
-          } yield respond.Created(resp)
-        case Left(value) =>
-          Task.succeed(respond.BadRequest(contract.definitions.BadRequestResponse(value)))
-      }
-
-    override def getElectionAdmin(
-        respond: contract.Resource.GetElectionAdminResponse.type,
-    )(titleMangled: String, token: String, xCorrelationId: String): Task[contract.Resource.GetElectionAdminResponse] =
-      for {
-        electionViewAdmin <- voting.viewElectionAdmin(token)
-        resp = electionViewAdmin.map { electionViewAdmin =>
-          val titleMangled = electionViewAdmin.metadata.titleMangled
-          val links = Vector(
+  override def createElection(respond: contract.Resource.CreateElectionResponse.type)(
+      body: contract.definitions.CreateElectionRequest,
+      xCorrelationId: String,
+  ): Task[contract.Resource.CreateElectionResponse] =
+    body.validateAs[CreateElection] match {
+      case Right(body) =>
+        for {
+          now <- clock.currentDateTime
+          (titleMangled, token) <- voting.createElection(body, now)
+          links = Vector(
             Links(
               show"/api/v1/election/admin/$titleMangled/$token",
-              "self",
+              "getElectionAdmin",
               Links.Method.Get,
               Vector(Links.Parameters("titleMangled", titleMangled), Links.Parameters("token", token)),
             ),
-          ) ++ (
-            if (electionViewAdmin.result.isDefined) Vector()
-            else
-              Vector(
-                Links(
-                  show"/api/v1/election/admin/$titleMangled/$token",
-                  "election-end",
-                  Links.Method.Post,
-                  Vector(Links.Parameters("titleMangled", titleMangled), Links.Parameters("token", token)),
-                ),
-              )
           )
-          contract.definitions.GetElectionAdminResponse(
-            electionViewAdmin.metadata.title,
-            titleMangled,
-            electionViewAdmin.metadata.description,
-            electionViewAdmin.metadata.started,
-            electionViewAdmin.admin.email.transformInto,
-            electionViewAdmin.admin.token,
-            electionViewAdmin.options.transformInto[Vector[contract.definitions.GetOptionResponse]],
-            electionViewAdmin.voters.transformInto[Vector[contract.definitions.GetVoterResponse]],
-            electionViewAdmin.result.transformInto[Option[contract.definitions.GetResultResponse]],
-            contract.definitions.LinksResponse(links),
-          )
-        }
-      } yield resp match {
-        case Some(resp) => respond.Ok(resp)
-        case None       => respond.NotFound(contract.definitions.NotFoundResponse("Election not found."))
-      }
-  }
+          resp = contract.definitions.LinksResponse(links)
+        } yield respond.Created(resp)
+      case Left(value) =>
+        Task.succeed(respond.BadRequest(contract.definitions.BadRequestResponse(value)))
+    }
 
-  private val serviceV1 = {
+  override def getElectionAdmin(
+      respond: contract.Resource.GetElectionAdminResponse.type,
+  )(titleMangled: String, token: String, xCorrelationId: String): Task[contract.Resource.GetElectionAdminResponse] =
+    for {
+      electionViewAdmin <- voting.viewElectionAdmin(token)
+      resp = electionViewAdmin.map { electionViewAdmin =>
+        val titleMangled = electionViewAdmin.metadata.titleMangled
+        val links = Vector(
+          Links(
+            show"/api/v1/election/admin/$titleMangled/$token",
+            "self",
+            Links.Method.Get,
+            Vector(Links.Parameters("titleMangled", titleMangled), Links.Parameters("token", token)),
+          ),
+        ) ++ (
+          if (electionViewAdmin.result.isDefined) Vector()
+          else
+            Vector(
+              Links(
+                show"/api/v1/election/admin/$titleMangled/$token",
+                "election-end",
+                Links.Method.Post,
+                Vector(Links.Parameters("titleMangled", titleMangled), Links.Parameters("token", token)),
+              ),
+            )
+        )
+        contract.definitions.GetElectionAdminResponse(
+          electionViewAdmin.metadata.title,
+          titleMangled,
+          electionViewAdmin.metadata.description,
+          electionViewAdmin.metadata.started,
+          electionViewAdmin.admin.email.transformInto,
+          electionViewAdmin.admin.token,
+          electionViewAdmin.options.transformInto[Vector[contract.definitions.GetOptionResponse]],
+          electionViewAdmin.voters.transformInto[Vector[contract.definitions.GetVoterResponse]],
+          electionViewAdmin.result.transformInto[Option[contract.definitions.GetResultResponse]],
+          contract.definitions.LinksResponse(links),
+        )
+      }
+    } yield resp match {
+      case Some(resp) => respond.Ok(resp)
+      case None       => respond.NotFound(contract.definitions.NotFoundResponse("Election not found."))
+    }
+
+  val oldRoutes: HttpRoutes[Task] = {
     val Http4sDslTask = Http4sDsl[Task]
     import Http4sDslTask._
 
@@ -272,12 +267,9 @@ final case class HttpLive(voting: Voting, clock: Clock.Service)(implicit
     }
   }
 
-  val httpApp: HttpApp[Task] =
-    Router("/v1" -> serviceV1, "/" -> new contract.Resource[Task]().routes(serviceV1handler)).orNotFound
-
 }
 
-object HttpLive {
+object HandlerLive {
 
   type Validation[+A] = ValidatedNec[TransformationError[String], A]
 
@@ -424,8 +416,8 @@ object HttpLive {
       clock <- ZIO.service[Clock.Service]
       runtime <- ZIO.runtime[Has[Blocking.Service] with Has[Clock.Service]]
       voting <- ZIO.service[Voting]
-      http: server.Http = HttpLive(voting, clock)(runtime)
-    } yield http
+      handler: Handler = HandlerLive(voting, clock)(runtime)
+    } yield handler
   ).toLayer
 
 }
