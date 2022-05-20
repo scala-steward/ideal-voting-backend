@@ -128,8 +128,7 @@ lazy val idealVotingContract = project
         OpenApiHelpers.discoverFilesRelative(openapiBase, _ => true).map(f => (file(s"$openapiBase/$f"), s"openapi/$f"))
       openapiFiles
     },
-//    ThisBuild / versionPolicyIntention := Compatibility.BinaryCompatible,
-    ThisBuild / versionPolicyIntention := Compatibility.None,
+    ThisBuild / versionPolicyIntention := Compatibility.BinaryCompatible,
     ThisBuild / versionPolicyIgnoredInternalDependencyVersions := Some("^\\d+\\.\\d+\\.\\d+\\+\\d+".r),
     mimaBinaryIssueFilters ++= List(
       ProblemFilters.exclude[DirectMissingMethodProblem]("*.apply"),
