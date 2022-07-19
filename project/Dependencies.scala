@@ -4,7 +4,7 @@ object Dependencies {
 
   object Versions {
 
-    val chimney = "0.6.1"
+    val chimney = "0.6.2"
     val circe = "0.14.2"
     val commonsLang = "3.12.0"
     val emil = "0.12.0"
@@ -18,7 +18,7 @@ object Dependencies {
     val monocle = "3.1.0"
     val pprint = "0.7.3"
     val snakeyaml = "1.30"
-    val zio = "1.0.15"
+    val zio = "1.0.16"
     val zioDoobie = "0.3.0"
     val zioLoggingSlf4j = "0.5.14"
     val zioMagic = "0.3.12"
