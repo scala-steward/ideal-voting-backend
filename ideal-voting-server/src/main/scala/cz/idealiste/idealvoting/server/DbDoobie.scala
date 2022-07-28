@@ -1,7 +1,8 @@
 package cz.idealiste.idealvoting.server
 
-import cats.Applicative
+import cats.data.Validated
 import cats.implicits._
+import cats.{Applicative, ApplicativeError}
 import cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.server.Db._
 import cz.idealiste.idealvoting.server.Voting._
@@ -43,7 +44,6 @@ final case class DbDoobie(transactor: Transactor[Task]) extends Db {
     commands.transact(transactor)
   }
 
-  @SuppressWarnings(Array("DisableSyntax.throw"))
   def readElection(token: String): Task[Option[Election]] = {
     val commands = for {
       electionMetadataAndAdmin <-
@@ -84,12 +84,15 @@ final case class DbDoobie(transactor: Transactor[Task]) extends Db {
               ORDER BY positions.ordering""".query[Int].to[List].map(Result(ended, _))
             }
             optionsMap = options.map(o => (o.id, o)).toMap
-            votes = votes0
+            votes <- votes0
               .groupBy(_._1)
               .valuesIterator
               .toList
-              .traverse(preferences => Vote.makeValidated(preferences.map(_._2), optionsMap))
-              .fold(es => throw es.head, identity)
+              .traverse(preferences => Vote.makeValidated(preferences.map(_._2), optionsMap)) match {
+              case Validated.Valid(vote) => Applicative[ConnectionIO].pure(vote)
+              // TODO: ignores remaining errors
+              case Validated.Invalid(e) => ApplicativeError[ConnectionIO, Throwable].raiseError(e.head)
+            }
           } yield Option(Election(electionMetadata, admin, options, voters, votes, optionsMap, result))
         case None =>
           Applicative[ConnectionIO].pure[Option[Election]](None)
@@ -98,7 +101,6 @@ final case class DbDoobie(transactor: Transactor[Task]) extends Db {
     commands.transact(transactor)
   }
 
-  @SuppressWarnings(Array("DisableSyntax.throw"))
   def readElectionAdmin(token: String): Task[Option[Election]] = {
     val commands = for {
       electionMetadataAndAdmin <-
@@ -138,12 +140,15 @@ final case class DbDoobie(transactor: Transactor[Task]) extends Db {
               ORDER BY positions.ordering""".query[Int].to[List].map(Result(ended, _))
             }
             optionsMap = options.map(o => (o.id, o)).toMap
-            votes = votes0
+            votes <- votes0
               .groupBy(_._1)
               .valuesIterator
               .toList
-              .traverse(preferences => Vote.makeValidated(preferences.map(_._2), optionsMap))
-              .fold(es => throw es.head, identity)
+              .traverse(preferences => Vote.makeValidated(preferences.map(_._2), optionsMap)) match {
+              case Validated.Valid(vote) => Applicative[ConnectionIO].pure(vote)
+              // TODO: ignores remaining errors
+              case Validated.Invalid(e) => ApplicativeError[ConnectionIO, Throwable].raiseError(e.head)
+            }
           } yield Option(
             Election(electionMetadata, admin, options, voters, votes, optionsMap, result),
           )
