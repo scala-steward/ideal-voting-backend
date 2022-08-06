@@ -14,7 +14,7 @@ object Dependencies {
     val logback = "1.2.11"
     val logbackJackson = "0.1.5"
     val logbackJson = "0.1.5"
-    val mariadb = "2.7.6"
+    val mariadb = "3.0.7"
     val monocle = "3.1.0"
     val pprint = "0.7.3"
     val snakeyaml = "1.30"
