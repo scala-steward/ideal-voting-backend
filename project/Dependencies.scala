@@ -8,7 +8,8 @@ object Dependencies {
     val circe = "0.14.2"
     val commonsLang = "3.12.0"
     val emil = "0.12.0"
-    val http4s = "0.23.12"
+    val http4s = "0.23.14"
+    val http4sBlaze = "0.23.12"
     val jackson = "2.13.3"
     val liquibaseSlf4j = "4.1.0"
     val logback = "1.2.11"
@@ -39,7 +40,7 @@ object Dependencies {
   val http4sClient = "org.http4s" %% "http4s-client" % Versions.http4s
   val http4sDsl = "org.http4s" %% "http4s-dsl" % Versions.http4s
   val http4sServer = "org.http4s" %% "http4s-server" % Versions.http4s
-  val http4sServerBlaze = "org.http4s" %% "http4s-blaze-server" % Versions.http4s
+  val http4sServerBlaze = "org.http4s" %% "http4s-blaze-server" % Versions.http4sBlaze
   val jackson = "com.fasterxml.jackson.core" % "jackson-databind" % Versions.jackson
   val liquibaseSlf4j = "com.mattbertolini" % "liquibase-slf4j" % Versions.liquibaseSlf4j
   val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
