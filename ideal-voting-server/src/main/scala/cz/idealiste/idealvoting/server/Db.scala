@@ -1,16 +1,7 @@
 package cz.idealiste.idealvoting.server
 
-import cz.idealiste.idealvoting.server.Db._
-import cz.idealiste.idealvoting.server.Voting.{
-  Admin,
-  BallotOption,
-  ElectionMetadata,
-  EndElectionResult,
-  Result,
-  Vote,
-  VoteInsertResult,
-  Voter,
-}
+import cz.idealiste.idealvoting.server.Db.*
+import cz.idealiste.idealvoting.server.Voting.*
 import zio.Task
 
 import java.time.OffsetDateTime

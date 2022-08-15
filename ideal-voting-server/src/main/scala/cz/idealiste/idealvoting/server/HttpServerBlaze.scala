@@ -1,38 +1,38 @@
 package cz.idealiste.idealvoting.server
 
 import cz.idealiste.idealvoting.server
-import cz.idealiste.idealvoting.server.HttpServerBlaze._
+import cz.idealiste.idealvoting.server.HttpServerBlaze.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Server
-import zio._
-import zio.config._
-import zio.config.magnolia.DeriveConfigDescriptor
-import zio.interop.catz._
+import zio.*
+import zio.config.*
+import zio.config.magnolia.Descriptor
+import zio.interop.catz.*
 
 final case class HttpServerBlaze(config: Config, httpApp: HttpApp) extends HttpServer {
 
-  lazy val server: TaskManaged[Server] = Managed.runtime.flatMap { implicit r: Runtime[Any] =>
-    import zio.interop.catz.implicits._
+  lazy val server: RIO[Scope, Server] = ZIO.executorWith { executor =>
+    import zio.interop.catz.implicits.*
     BlazeServerBuilder[Task]
-      .withExecutionContext(r.platform.executor.asEC)
+      .withExecutionContext(executor.asExecutionContext)
       .bindHttp(config.port, config.host)
       .withHttpApp(httpApp.httpApp)
       .resource
-      .toManagedZIO
+      .toScopedZIO
   }
 
 }
 
 object HttpServerBlaze {
 
-  private[server] val layer = (apply _).toLayer[HttpServer]
+  private[server] val layer = ZLayer.fromFunction(apply _).map(_.prune[HttpServer])
 
   final case class Config(host: String, port: Int)
 
   object Config {
-    private[server] val layer = ZIO.service[server.Config].map(_.httpServer).toLayer
+    private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.httpServer))
     implicit lazy val configDescriptor: ConfigDescriptor[Config] =
-      DeriveConfigDescriptor.descriptor[Config]
+      Descriptor.descriptor[Config]
   }
 
 }

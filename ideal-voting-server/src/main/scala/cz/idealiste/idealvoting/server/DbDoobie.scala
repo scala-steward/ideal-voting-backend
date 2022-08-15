@@ -1,18 +1,18 @@
 package cz.idealiste.idealvoting.server
 
 import cats.data.Validated
-import cats.implicits._
+import cats.implicits.*
 import cats.{Applicative, ApplicativeError}
 import cz.idealiste.idealvoting.server
-import cz.idealiste.idealvoting.server.Db._
-import cz.idealiste.idealvoting.server.Voting._
-import doobie._
-import doobie.implicits._
-import doobie.implicits.javatimedrivernative._
+import cz.idealiste.idealvoting.server.Db.*
+import cz.idealiste.idealvoting.server.Voting.*
+import doobie.*
+import doobie.implicits.*
+import doobie.implicits.javatimedrivernative.*
 import emil.MailAddress
-import emil.doobie.EmilDoobieMeta._
-import zio._
-import zio.interop.catz._
+import emil.doobie.EmilDoobieMeta.*
+import zio.*
+import zio.interop.catz.asyncInstance
 
 import java.time.OffsetDateTime
 
@@ -219,10 +219,10 @@ final case class DbDoobie(transactor: Transactor[Task]) extends Db {
 
 object DbDoobie {
 
-  private[server] val layer = (apply _).toLayer[Db]
+  private[server] val layer = ZLayer.fromFunction(apply _).map(_.prune[Db])
 
   object Transactor {
-    private[server] val layer = ZIO.service[server.Config].map(_.dbTransactor).toLayer
+    private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.dbTransactor))
   }
 
 }

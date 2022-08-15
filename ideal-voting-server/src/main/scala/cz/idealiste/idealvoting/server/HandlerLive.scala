@@ -1,31 +1,27 @@
 package cz.idealiste.idealvoting.server
 
 import cats.data.ValidatedNec
-import cats.implicits._
+import cats.implicits.*
 import cz.idealiste.idealvoting.contract
 import cz.idealiste.idealvoting.contract.definitions.LinksResponse.Links
-import cz.idealiste.idealvoting.server.HandlerLive._
-import cz.idealiste.idealvoting.server.Voting._
+import cz.idealiste.idealvoting.server.HandlerLive.*
+import cz.idealiste.idealvoting.server.Voting.*
 import emil.MailAddress
-import emil.javamail.syntax._
+import emil.javamail.syntax.*
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
-import io.scalaland.chimney.cats._
-import io.scalaland.chimney.dsl._
+import io.scalaland.chimney.cats.*
+import io.scalaland.chimney.dsl.*
 import io.scalaland.chimney.{TransformationError, Transformer, TransformerF}
-import org.http4s._
-import org.http4s.circe.CirceEntityCodec._
+import org.http4s.*
+import org.http4s.circe.CirceEntityCodec.*
 import org.http4s.dsl.Http4sDsl
-import zio._
-import zio.blocking.Blocking
-import zio.clock.Clock
-import zio.interop.catz._
+import zio.*
+import zio.interop.catz.asyncInstance
 
 import java.time.OffsetDateTime
 
-final case class HandlerLive(voting: Voting, clock: Clock.Service)(implicit
-    r: Runtime[Has[Blocking.Service] with Has[Clock.Service]],
-) extends Handler {
+final case class HandlerLive(voting: Voting, clock: Clock) extends Handler {
 
   override def createElection(respond: contract.Resource.CreateElectionResponse.type)(
       body: contract.definitions.CreateElectionRequest,
@@ -47,7 +43,7 @@ final case class HandlerLive(voting: Voting, clock: Clock.Service)(implicit
           resp = contract.definitions.LinksResponse(links)
         } yield respond.Created(resp)
       case Left(value) =>
-        Task.succeed(respond.BadRequest(contract.definitions.BadRequestResponse(value)))
+        ZIO.succeed(respond.BadRequest(contract.definitions.BadRequestResponse(value)))
     }
 
   override def getElectionAdmin(
@@ -96,7 +92,7 @@ final case class HandlerLive(voting: Voting, clock: Clock.Service)(implicit
 
   val oldRoutes: HttpRoutes[Task] = {
     val Http4sDslTask = Http4sDsl[Task]
-    import Http4sDslTask._
+    import Http4sDslTask.*
 
     HttpRoutes.of[Task] {
       case GET -> Root / "status" =>
@@ -411,13 +407,12 @@ object HandlerLive {
     implicit lazy val decoder: Decoder[Error] = deriveDecoder
   }
 
-  private[server] val layer = (
+  private[server] val layer = ZLayer.fromZIO {
     for {
-      clock <- ZIO.service[Clock.Service]
-      runtime <- ZIO.runtime[Has[Blocking.Service] with Has[Clock.Service]]
+      clock <- ZIO.service[Clock]
       voting <- ZIO.service[Voting]
-      handler: Handler = HandlerLive(voting, clock)(runtime)
+      handler: Handler = HandlerLive(voting, clock)
     } yield handler
-  ).toLayer
+  }
 
 }

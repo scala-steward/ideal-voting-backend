@@ -1,41 +1,34 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits._
+import cats.implicits.*
 import com.dimafeng.testcontainers.DockerComposeContainer
-import cz.idealiste.idealvoting.server.HandlerLive._
+import cz.idealiste.idealvoting.server.HandlerLive.*
 import emil.MailAddress
-import emil.javamail.syntax._
-import org.http4s.circe.CirceEntityCodec._
-import org.http4s.implicits._
+import emil.javamail.syntax.*
+import org.http4s.circe.CirceEntityCodec.*
+import org.http4s.implicits.*
 import org.http4s.{Method, Request, Status, Uri}
-import zio._
-import zio.blocking.Blocking
-import zio.clock.Clock
-import zio.interop.catz._
-import zio.logging.Logging
-import zio.logging.slf4j.Slf4jLogger
-import zio.magic._
-import zio.random.Random
-import zio.system.System
-import zio.test.Assertion._
-import zio.test.TestAspect._
-import zio.test._
-import zio.test.environment.TestEnvironment
+import zio.*
+import zio.interop.catz.*
+import zio.logging.backend.SLF4J
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
+import zio.test.*
 
-object MainSpec extends DefaultRunnableSpec {
+object MainSpec extends ZIOSpecDefault {
 
   @SuppressWarnings(Array("DisableSyntax.throw"))
   private def email(string: String): MailAddress =
     MailAddress.parseValidated(string).fold(e => throw e.head, m => m)
 
-  def spec: ZSpec[TestEnvironment, Failure] =
+  def spec: Spec[TestEnvironment, Any] =
     suite("Service")(
-      testM("/status should return OK") {
+      test("/status should return OK") {
         val response =
-          ZIO.serviceWith[HttpApp](_.httpApp.run(Request(method = Method.GET, uri = uri"/v1/status")))
-        assertM(response.map(_.status))(equalTo(Status.Ok))
+          ZIO.serviceWithZIO[HttpApp](_.httpApp.run(Request(method = Method.GET, uri = uri"/v1/status")))
+        assertZIO(response.map(_.status))(equalTo(Status.Ok))
       },
-      testM("/election POST should create an election") {
+      test("/election POST should create an election") {
         val request = CreateElectionRequest(
           "election 1",
           None,
@@ -43,7 +36,7 @@ object MainSpec extends DefaultRunnableSpec {
           List(CreateOptionRequest("option1", None), CreateOptionRequest("option2", Some("Option 2"))),
           List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
         )
-        val response = ZIO.serviceWith[HttpApp] { http =>
+        val response = ZIO.serviceWithZIO[HttpApp] { http =>
           val httpApp = http.httpApp
           for {
             response <- httpApp.run(
@@ -64,7 +57,7 @@ object MainSpec extends DefaultRunnableSpec {
             response <- response.as[GetElectionAdminResponse]
           } yield response
         }
-        assertM(response)(
+        assertZIO(response)(
           hasField("title", (r: GetElectionAdminResponse) => r.title, equalTo("election 1")) &&
             hasField(
               "titleMangled",
@@ -105,7 +98,7 @@ object MainSpec extends DefaultRunnableSpec {
             ),
         )
       },
-      testM("/election/.../<token> POST should cast a vote") {
+      test("/election/.../<token> POST should cast a vote") {
         val requestCreate = CreateElectionRequest(
           "election 2",
           None,
@@ -114,7 +107,7 @@ object MainSpec extends DefaultRunnableSpec {
           List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
         )
         val requestCast = CastVoteRequest(List(1, 0))
-        val responseViewAdmin = ZIO.serviceWith[HttpApp] { http =>
+        val responseViewAdmin = ZIO.serviceWithZIO[HttpApp] { http =>
           val httpApp = http.httpApp
           for {
             responseCreate <- httpApp
@@ -145,7 +138,7 @@ object MainSpec extends DefaultRunnableSpec {
               .flatMap(_.as[GetElectionAdminResponse])
           } yield responseViewAdmin
         }
-        assertM(responseViewAdmin)(
+        assertZIO(responseViewAdmin)(
           hasField(
             "voters",
             (r: GetElectionAdminResponse) => r.voters.map(r => (r.voter.name, r.voter.address, r.voted)),
@@ -158,7 +151,7 @@ object MainSpec extends DefaultRunnableSpec {
           ),
         )
       },
-      testM("/election/admin/.../<token> POST should end the election") {
+      test("/election/admin/.../<token> POST should end the election") {
         val requestCreate = CreateElectionRequest(
           "election 3",
           None,
@@ -167,7 +160,7 @@ object MainSpec extends DefaultRunnableSpec {
           List(email("Voter 1 <voter1@x.com>"), email("voter2@y.org")),
         )
         val requestCast = CastVoteRequest(List(1, 0))
-        val responseResult = ZIO.serviceWith[HttpApp] { http =>
+        val responseResult = ZIO.serviceWithZIO[HttpApp] { http =>
           val httpApp = http.httpApp
           for {
             responseCreate <- httpApp
@@ -201,20 +194,22 @@ object MainSpec extends DefaultRunnableSpec {
               .flatMap(_.as[GetElectionAdminResponse])
           } yield responseViewAdmin.result.map(r => (r.positions, r.votes))
         }
-        assertM(responseResult)(equalTo(Some((List(1, 0), List(List(1, 0))))))
+        assertZIO(responseResult)(equalTo(Some((List(1, 0), List(List(1, 0))))))
       },
-    ).provideSomeLayerShared[Blocking with Random with System](testLayer.orDie) @@ sequential
+    ).provideLayerShared(testLayer.orDie) @@ sequential
 
-  lazy val testLayerConfig: RLayer[Blocking with System, Has[Config] with Logging] =
-    ZLayer.fromSomeMagic[Blocking with System, Has[Config] with Logging with Has[DockerComposeContainer]](
-      Slf4jLogger.make((_, s) => s),
-      Config.layer(List()),
+  lazy val testLayerConfig: TaskLayer[Config] =
+    ZLayer.make[Config & DockerComposeContainer](
+      SLF4J.slf4j,
+      ZIOAppArgs.empty,
+      Config.layer,
       TestContainer.dockerCompose,
     ) >+> TestContainer.layer
 
-  lazy val testLayer: RLayer[Blocking with Random with System, Has[HttpApp]] =
-    ZLayer.fromSomeMagic[Blocking with Random with System, Has[HttpApp]](
-      Clock.live,
+  lazy val testLayer: TaskLayer[HttpApp] =
+    ZLayer.make[HttpApp](
+      liveEnvironment.map(_.prune[Clock]),
+      TestRandom.deterministic,
       testLayerConfig,
       Main.httpLayer,
     )

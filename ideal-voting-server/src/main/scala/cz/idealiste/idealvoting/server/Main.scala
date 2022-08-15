@@ -1,25 +1,21 @@
 package cz.idealiste.idealvoting.server
 
-import org.http4s.server._
-import zio._
-import zio.blocking.Blocking
-import zio.clock.Clock
+import org.http4s.server.*
+import zio.*
 import zio.doobie.liquibase.ZIODoobieLiquibase
-import zio.logging.Logging
-import zio.logging.slf4j.Slf4jLogger
-import zio.magic._
-import zio.random.Random
-import zio.system.System
+import zio.logging.backend.SLF4J
 
-object Main extends App {
+object Main extends ZIOAppDefault {
 
-  override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    serverLayer(args).build.useForever.exitCode
+  override def run: ZIO[ZIOAppArgs, Throwable, Nothing] =
+    serverLayer.launch
 
-  private[server] def serverLayer(args: List[String]) =
-    ZLayer.fromSomeMagic[Blocking with Clock with Random with System, Has[Server]](
-      Slf4jLogger.make((_, s) => s),
-      Config.layer(args),
+  private[server] val serverLayer =
+    ZLayer.makeSome[ZIOAppArgs, Server](
+      ZLayer.succeedEnvironment(DefaultServices.live),
+      Runtime.removeDefaultLoggers,
+      SLF4J.slf4j,
+      Config.layer,
       httpLayer,
       HttpServerBlaze.Config.layer,
       HttpServerBlaze.layer,
@@ -27,7 +23,7 @@ object Main extends App {
     )
 
   private[server] lazy val httpLayer =
-    ZLayer.fromSomeMagic[Blocking with Clock with Random with Has[Config] with Logging, Has[HttpApp]](
+    ZLayer.makeSome[Clock & Random & Config, HttpApp](
       DbDoobie.Transactor.layer,
       ZIODoobieLiquibase.layer,
       DbDoobie.layer,

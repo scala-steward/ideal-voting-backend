@@ -1,17 +1,15 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits._
+import cats.implicits.*
 import cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.server.Db.Election
-import cz.idealiste.idealvoting.server.Voting._
-import cz.idealiste.idealvoting.server.VotingLive._
+import cz.idealiste.idealvoting.server.Voting.*
+import cz.idealiste.idealvoting.server.VotingLive.*
 import org.apache.commons.lang3.StringUtils
-import zio._
-import zio.config._
-import zio.config.magnolia.DeriveConfigDescriptor
-import zio.interop.catz.core._
-import zio.logging.Logger
-import zio.random.Random
+import zio.*
+import zio.config.*
+import zio.config.magnolia.Descriptor
+import zio.interop.catz.core.*
 
 import java.time.OffsetDateTime
 
@@ -19,14 +17,13 @@ final case class VotingLive(
     config: Config,
     db: Db,
     votingSystem: VotingSystem,
-    logger: Logger[String],
-    random: Random.Service,
+    random: Random,
 ) extends Voting {
 
   // TODO: distinct type for Voter token and Admin token and represent internally as UUID
   private val generateToken: UIO[String] = random
     .nextIntBetween(97, 123)
-    .replicateM(config.tokenLength)
+    .replicateZIO(config.tokenLength)
     .map(_.map(_.toChar).mkString)
 
   private def mangleTitle(title: String): String = {
@@ -62,9 +59,9 @@ final case class VotingLive(
       options = create.options.zipWithIndex.map { case (CreateOption(title, description), id) =>
         BallotOption(id, title, description)
       }
-      () <- logger.debug(s"Creating election $electionMetadata with admin $admin, voters $voters and options $options.")
+      () <- ZIO.logDebug(s"Creating election $electionMetadata with admin $admin, voters $voters and options $options.")
       () <- db.createElection(electionMetadata, admin, options, voters)
-      () <- logger.info(s"Created election $titleMangled.")
+      () <- ZIO.logInfo(s"Created election $titleMangled.")
     } yield (titleMangled, adminToken)
   }
 
@@ -83,18 +80,18 @@ final case class VotingLive(
       election <- db.readElection(token)
       result <- election match {
         case None =>
-          logger.info(s"Couldn't cast vote, because election for token $token not found.") >>
-            Task.succeed(VoteInsertResult.TokenNotFound)
+          ZIO.logInfo(s"Couldn't cast vote, because election for token $token not found.") >>
+            ZIO.succeed(VoteInsertResult.TokenNotFound)
         case Some(election) =>
           Vote.make(preferences, election.optionsMap) match {
             case Left(invalidVote) =>
-              logger.info(
+              ZIO.logInfo(
                 s"Couldn't cast vote for election ${election.metadata.titleMangled} because of $invalidVote",
-              ) >> Task.succeed(invalidVote)
+              ) >> ZIO.succeed(invalidVote)
             case Right(vote) =>
               db.castVote(token, vote)
                 .flatTap(r => // TODO: logging for each case as in `endElection`
-                  logger.info(s"Casting vote for election ${election.metadata.titleMangled} with result $r."),
+                  ZIO.logInfo(s"Casting vote for election ${election.metadata.titleMangled} with result $r."),
                 )
           }
       }
@@ -105,20 +102,20 @@ final case class VotingLive(
     election <- db.readElectionAdmin(token)
     result <- election match {
       case None =>
-        logger.info(s"Couldn't end election, because election for token $token not found.") >>
-          Task.succeed(EndElectionResult.TokenNotFound)
+        ZIO.logInfo(s"Couldn't end election, because election for token $token not found.") >>
+          ZIO.succeed(EndElectionResult.TokenNotFound)
       case Some(Election(_, _, _, _, _, _, Some(Result(ended, _)))) =>
-        logger.info(s"Couldn't end election, because election for token $token already ended on $ended.") >>
-          Task.succeed(EndElectionResult.ElectionAlreadyEnded)
+        ZIO.logInfo(s"Couldn't end election, because election for token $token already ended on $ended.") >>
+          ZIO.succeed(EndElectionResult.ElectionAlreadyEnded)
       case Some(election) =>
         val positions = votingSystem.computePositions(election.options.map(_.id), election.votes.map(_.preferences))
         db.endElection(token, positions, now).flatTap {
           case EndElectionResult.TokenNotFound =>
-            logger.info(s"Couldn't end election, because election for token $token not found (from DB).")
+            ZIO.logInfo(s"Couldn't end election, because election for token $token not found (from DB).")
           case EndElectionResult.ElectionAlreadyEnded =>
-            logger.info(s"Couldn't end election, because election for token $token already ended (from DB).")
+            ZIO.logInfo(s"Couldn't end election, because election for token $token already ended (from DB).")
           case EndElectionResult.SuccessfullyEnded =>
-            logger.info(s"Successfully ended election for token $token with positions $positions.")
+            ZIO.logInfo(s"Successfully ended election for token $token with positions $positions.")
         }
     }
   } yield result
@@ -126,11 +123,11 @@ final case class VotingLive(
 
 object VotingLive {
 
-  private[server] val layer = (apply _).toLayer[Voting]
+  private[server] val layer = ZLayer.fromFunction(apply _).map(_.prune[Voting])
 
   final case class Config(tokenLength: Int = 10)
   object Config {
-    private[server] val layer = ZIO.service[server.Config].map(_.voting).toLayer
-    implicit lazy val configDescriptor: ConfigDescriptor[Config] = DeriveConfigDescriptor.descriptor[Config]
+    private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.voting))
+    implicit lazy val configDescriptor: ConfigDescriptor[Config] = Descriptor.descriptor[Config]
   }
 }

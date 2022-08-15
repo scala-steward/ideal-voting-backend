@@ -19,16 +19,13 @@ object Dependencies {
     val monocle = "3.1.0"
     val pprint = "0.7.3"
     val snakeyaml = "1.30"
-    val zio = "1.0.16"
-    val zioDoobie = "0.3.0"
-    val zioLoggingSlf4j = "0.5.14"
-    val zioMagic = "0.3.12"
+    val zio = "2.0.0"
+    val zioDoobie = "0.4.0"
+    val zioLoggingSlf4j = "2.1.0"
 
     // Test
-    val zioTestcontainers = "0.3.0"
+    val zioTestcontainers = "0.4.0"
 
-    // Scalafix plugins
-    val zioMagicComments = "0.1.0"
   }
 
   val chimney = "io.scalaland" %% "chimney-cats" % Versions.chimney
@@ -52,13 +49,10 @@ object Dependencies {
   val snakeyaml = "org.yaml" % "snakeyaml" % Versions.snakeyaml
   val zioDoobieLiquibase = "com.github.sideeffffect" %% "zio-doobie-liquibase" % Versions.zioDoobie
   val zioLoggingSlf4j = "dev.zio" %% "zio-logging-slf4j" % Versions.zioLoggingSlf4j
-  val zioMagic = "io.github.kitlangton" %% "zio-magic" % Versions.zioMagic
   val zioTest = "dev.zio" %% "zio-test" % Versions.zio
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio
 
   // Test
   val zioTestcontainers = "com.github.sideeffffect" %% "zio-testcontainers" % Versions.zioTestcontainers
 
-  // Scalafix plugins
-  val zioMagicComments = "com.timushev" %% "zio-magic-comments" % Versions.zioMagicComments
 }

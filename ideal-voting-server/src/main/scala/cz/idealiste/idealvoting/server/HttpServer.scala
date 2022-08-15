@@ -1,16 +1,16 @@
 package cz.idealiste.idealvoting.server
 
 import org.http4s.server.Server
-import zio.{TaskManaged, ZManaged}
+import zio.*
 
 trait HttpServer {
-  def server: TaskManaged[Server]
+  def server: RIO[Scope, Server]
 }
 
 object HttpServer {
 
   object Server {
-    private[server] val layer = ZManaged.service[HttpServer].flatMap(_.server).toLayer
+    private[server] val layer = ZLayer.scoped(ZIO.service[HttpServer].flatMap(_.server))
   }
 
 }

@@ -128,8 +128,6 @@ lazy val idealVotingContract = project
         OpenApiHelpers.discoverFilesRelative(openapiBase, _ => true).map(f => (file(s"$openapiBase/$f"), s"openapi/$f"))
       openapiFiles
     },
-    ThisBuild / versionPolicyIntention := Compatibility.None,
-    ThisBuild / versionPolicyIgnoredInternalDependencyVersions := Some("^\\d+\\.\\d+\\.\\d+\\+\\d+".r),
     mimaBinaryIssueFilters ++= List(
       ProblemFilters.exclude[DirectMissingMethodProblem]("*.apply"),
       ProblemFilters.exclude[DirectMissingMethodProblem]("*.copy"),
@@ -162,7 +160,7 @@ lazy val idealVotingServer = project
       Dependencies.emil,
       Dependencies.http4sServerBlaze,
       Dependencies.jackson,
-      Dependencies.liquibaseSlf4j % "runtime",
+      Dependencies.liquibaseSlf4j,
       Dependencies.logback,
       Dependencies.logbackJackson,
       Dependencies.logbackJson,
@@ -172,12 +170,12 @@ lazy val idealVotingServer = project
       Dependencies.snakeyaml,
       Dependencies.zioDoobieLiquibase,
       Dependencies.zioLoggingSlf4j,
-      Dependencies.zioMagic,
       // Test
       Dependencies.zioTest % Test,
       Dependencies.zioTestcontainers % Test,
       Dependencies.zioTestSbt % Test,
     ),
+    ThisBuild / versionPolicyIntention := Compatibility.None,
   )
   .dependsOn(idealVotingContract)
   .enablePlugins(BuildInfoPlugin)
@@ -195,21 +193,18 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
     ),
   ),
   crossScalaVersions := List(DecentScala.decentScalaVersion213),
-  ThisBuild / scalafixDependencies ++= List(
-    Dependencies.zioMagicComments,
-  ),
   testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   missinglinkExcludedDependencies ++= List(
     moduleFilter(organization = "ch.qos.logback", name = "logback-classic"),
     moduleFilter(organization = "ch.qos.logback", name = "logback-core"),
     moduleFilter(organization = "com.zaxxer", name = "HikariCP"),
+    moduleFilter(organization = "dev.zio", name = "zio-interop-cats_2.13"), // depends on zio-managed
     moduleFilter(organization = "org.slf4j", name = "slf4j-api"),
   ),
   missinglinkIgnoreDestinationPackages ++= List(
     IgnoredPackage("java.sql"), // https://github.com/tpolecat/doobie/pull/1632
     IgnoredPackage("org.osgi.framework"),
   ),
-  mimaReportBinaryIssues := {},
   // https://github.com/olafurpg/sbt-ci-release/issues/181
   sonatypeCredentialHost := "s01.oss.sonatype.org",
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
@@ -219,7 +214,7 @@ lazy val generateOpenApiDocTask: TaskKey[Unit] = TaskKey[Unit]("generateOpenApiD
 
 addCommandAlias(
   "ci",
-  "; check; idealVotingContract/versionPolicyCheck; +idealVotingContract/generateOpenApiDoc; +publishLocal",
+  "; check; +idealVotingContract/generateOpenApiDoc; +publishLocal",
 )
 addCommandAlias(
   "cipublish",

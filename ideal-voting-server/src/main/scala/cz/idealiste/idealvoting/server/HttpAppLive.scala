@@ -2,9 +2,9 @@ package cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.contract
 import org.http4s
 import org.http4s.server.Router
-import zio.Task
-import zio.interop.catz._
-import zio.interop.catz.implicits._
+import zio.interop.catz.*
+import zio.interop.catz.implicits.*
+import zio.{Task, ZLayer}
 
 final case class HttpAppLive(handler: Handler) extends HttpApp {
 
@@ -16,5 +16,5 @@ final case class HttpAppLive(handler: Handler) extends HttpApp {
 
 }
 object HttpAppLive {
-  private[server] val layer = (apply _).toLayer[HttpApp]
+  private[server] val layer = ZLayer.fromFunction(apply _).map(_.prune[HttpApp])
 }
