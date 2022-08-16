@@ -24,7 +24,7 @@ object Dependencies {
     val zioLoggingSlf4j = "2.1.0"
 
     // Test
-    val zioTestcontainers = "0.4.0"
+    val zioTestcontainers = "0.4.1"
 
   }
 
