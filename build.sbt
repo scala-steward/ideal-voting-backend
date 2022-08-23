@@ -4,67 +4,22 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 lazy val OpenApiHelpers = new {
 
-  private def dropExtension(file: File): String = {
-    file.getPath.split('.').toList match {
-      case l @ List()  => l
-      case l @ List(_) => l
-      case l           => l.dropRight(1)
-    }
-  }.mkString(".")
-
-  private def isOpenApiSpec(file: File): Boolean = {
-    import org.snakeyaml.engine.v2.api.{Load, LoadSettings}
-
-    import java.util.{Map => JMap}
-    import scala.io.Source
-    import scala.jdk.CollectionConverters._
-    import scala.util.{Try, Using}
-
-    Using(Source.fromFile(file)) { source =>
-      val reader = source.bufferedReader()
-      val docs = new Load(LoadSettings.builder().build()).loadAllFromReader(reader).asScala
-      val yamls = docs.flatMap(d => Try(d.asInstanceOf[JMap[String, Any]].asScala).toOption)
-      yamls.exists(_.contains("openapi"))
-    }.toOption.getOrElse(false)
-  }
-
-  def discoverFilesRelative(base: File, predicate: File => Boolean): List[File] = {
-    def recursiveListFiles(f: File): List[File] = {
-      val these = Option(f.listFiles).toList.flatten
-      these.filter(f => f.isFile && predicate(f)) ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
-    }
-    recursiveListFiles(base).flatMap(_.relativeTo(base)).toList
-  }
-
-  def createGuardrailTasks(
-      sourceDirectory: File,
-  )(relativeFileToTasks: (String, String) => List[dev.guardrail.sbt.Types.Args]): List[dev.guardrail.sbt.Types.Args] = {
-    val specs = discoverFilesRelative(sourceDirectory, isOpenApiSpec)
-    specs.flatMap { relativeFile =>
-      val relativeFileString = relativeFile.getPath
-      val pkg = dropExtension(relativeFile).replace('/', '.')
-      relativeFileToTasks(relativeFileString, pkg)
-    }
-  }
+  import GuardrailHelpers._
 
   def generateOpenApiDoc(outDir: File, openapiSourceDir: File): Int = {
     import java.nio.file.Files
     import scala.sys.process._
     import scala.util.Using
-    val openapiFiles = discoverFilesRelative(openapiSourceDir, isOpenApiSpec)
+    val openapiFiles = discoverOpenApiFiles(openapiSourceDir)
     Files.createDirectories(outDir.toPath)
-    def command(openapiFile: File) = {
-      val openapiFilePath = openapiFile.getPath
-      val withoutExtension = dropExtension(openapiFile)
-      val outDirIndividual = outDir / withoutExtension
+    def command(openApiFile: DiscoveredFile) = {
+      val outDirIndividual = outDir / openApiFile.fileRelativePathWithoutExtension
       Files.createDirectories(outDirIndividual.toPath)
-      s"docker run --rm -v $outDirIndividual:/out -v $openapiSourceDir:/openapis openapitools/openapi-generator-cli:v5.2.1 generate -i /openapis/$openapiFilePath -g html2 -o /out"
+      s"docker run --rm -v $outDirIndividual:/out -v $openapiSourceDir:/openapis openapitools/openapi-generator-cli:v6.0.1 generate -i /openapis/${openApiFile.fileRelative} -g html2 -o /out"
     }
     val result = openapiFiles.map(command(_) !).sum
     val items = openapiFiles.map { file =>
-      val relativePath = dropExtension(file)
-      val name = dropExtension(file).replace('/', '.')
-      s"""<li><a href="$relativePath/index.html" target="_blank"><code>$name</code></a></li>"""
+      s"""<li><a href="${file.fileRelativePathWithoutExtension}/index.html" target="_blank"><code>${file.pkg}</code></a></li>"""
     }
     val index =
       s"""|<!DOCTYPE html>
@@ -104,14 +59,11 @@ lazy val idealVotingContract = project
     Compile / unmanagedResourceDirectories += (Compile / resourceDirectory).value / "openapi",
     Test / unmanagedSourceDirectories += (Test / sourceDirectory).value / "openapi",
     Test / unmanagedResourceDirectories += (Test / resourceDirectory).value / "openapi",
-    Compile / guardrailTasks := {
-      val base = (Compile / sourceDirectory).value / "openapi"
-      OpenApiHelpers.createGuardrailTasks(base) { (relativeFileString, pkg) =>
-        List(
-          ScalaClient(base / relativeFileString, pkg = pkg, framework = "http4s"),
-          ScalaServer(base / relativeFileString, pkg = pkg, framework = "http4s"),
-        )
-      }
+    Compile / guardrailTasks := (Compile / guardrailDiscoveredOpenApiFiles).value.flatMap { openApiFile =>
+      List(
+        ScalaClient(openApiFile.file, pkg = openApiFile.pkg, framework = "http4s"),
+        ScalaServer(openApiFile.file, pkg = openApiFile.pkg, framework = "http4s"),
+      )
     },
     generateOpenApiDocTask := {
       val baseDirectoryValue = baseDirectory.value
@@ -124,8 +76,9 @@ lazy val idealVotingContract = project
     Compile / packageDoc / mappings ++= {
       val baseDirectoryValue = baseDirectory.value
       val openapiBase = baseDirectoryValue / "target-openapi"
-      val openapiFiles =
-        OpenApiHelpers.discoverFilesRelative(openapiBase, _ => true).map(f => (file(s"$openapiBase/$f"), s"openapi/$f"))
+      val openapiFiles = GuardrailHelpers
+        .discoverFiles(openapiBase)
+        .map(f => (openapiBase / f.fileRelativePath, s"openapi/${f.fileRelative}"))
       openapiFiles
     },
     mimaBinaryIssueFilters ++= List(
