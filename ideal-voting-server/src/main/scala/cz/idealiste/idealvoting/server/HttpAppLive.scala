@@ -1,4 +1,5 @@
 package cz.idealiste.idealvoting.server
+
 import cz.idealiste.idealvoting.contract
 import org.http4s
 import org.http4s.server.Router

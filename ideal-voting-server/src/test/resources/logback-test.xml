@@ -1,39 +1,15 @@
 <configuration>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="stdoutjson" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
-                <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
-                <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
-                <appendLineSeparator>true</appendLineSeparator>
-                <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
-                    <!--<prettyPrint>true</prettyPrint>-->
-                </jsonFormatter>
-            </layout>
-        </encoder>
-    </appender>
+    <include resource="logback-included.xml"/>
 
     <root level="debug">
         <appender-ref ref="STDOUT"/>
-<!--        <appender-ref ref="stdoutjson"/>-->
     </root>
 
-    <logger name="ch.qos.logback" level="WARN"/>
-    <logger name="com.zaxxer.hikari" level="WARN"/>
-    <logger name="org.http4s" level="WARN"/>
-    <logger name="org.mariadb" level="WARN"/>
-    <logger name="liquibase" level="WARN"/>
-
+    <logger name="🐳 [alpine/socat:1" level="WARN"/>
+    <logger name="🐳 [docker-compose]" level="WARN"/>
+    <logger name="🐳 [testcontainers/ryuk:0" level="WARN"/>
     <logger name="com.github.dockerjava" level="WARN"/>
-    <logger name="docker-compose" level="WARN"/>
     <logger name="org.testcontainers" level="WARN"/>
-
-    <statusListener class="ch.qos.logback.core.status.OnErrorConsoleStatusListener"/>
 
 </configuration>

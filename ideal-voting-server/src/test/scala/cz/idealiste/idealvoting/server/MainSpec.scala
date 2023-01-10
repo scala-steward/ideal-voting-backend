@@ -19,7 +19,7 @@ object MainSpec extends ZIOSpecDefault {
 
   @SuppressWarnings(Array("DisableSyntax.throw"))
   private def email(string: String): MailAddress =
-    MailAddress.parseValidated(string).fold(e => throw e.head, m => m)
+    MailAddress.parseValidated(string).valueOr(e => throw e.head)
 
   def spec: Spec[TestEnvironment, Any] =
     suite("Service")(
@@ -196,15 +196,16 @@ object MainSpec extends ZIOSpecDefault {
         }
         assertZIO(responseResult)(equalTo(Some((List(1, 0), List(List(1, 0))))))
       },
-    ).provideLayerShared(testLayer.orDie) @@ sequential
+    ).provideShared(testLayer.orDie) @@ sequential
 
   lazy val testLayerConfig: TaskLayer[Config] =
     ZLayer.make[Config & DockerComposeContainer](
+      Runtime.removeDefaultLoggers,
       SLF4J.slf4j,
       ZIOAppArgs.empty,
       Config.layer,
       TestContainer.dockerCompose,
-    ) >+> TestContainer.layer
+    ) >>> TestContainer.layer
 
   lazy val testLayer: TaskLayer[HttpApp] =
     ZLayer.make[HttpApp](
