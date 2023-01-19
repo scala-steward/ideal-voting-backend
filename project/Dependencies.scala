@@ -8,7 +8,7 @@ object Dependencies {
     val circe = "0.14.3"
     val commonsLang = "3.12.0"
     val emil = "0.12.0"
-    val http4s = "0.23.17"
+    val http4s = "0.23.18"
     val http4sBlaze = "0.23.13"
     val jackson = "2.13.4"
     val liquibaseSlf4j = "4.1.0"
