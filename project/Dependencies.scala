@@ -10,7 +10,7 @@ object Dependencies {
     val emil = "0.12.0"
     val http4s = "0.23.24"
     val http4sBlaze = "0.23.15"
-    val jackson = "2.15.3"
+    val jackson = "2.16.0"
     val liquibaseSlf4j = "4.1.0"
     val logback = "1.3.11"
     val logbackJackson = "0.1.5"
