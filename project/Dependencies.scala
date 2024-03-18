@@ -11,7 +11,7 @@ object Dependencies {
     val http4s = "0.23.25"
     val http4sBlaze = "0.23.16"
     val jackson = "2.17.0"
-    val liquibaseSlf4j = "4.1.0"
+    val liquibaseSlf4j = "5.0.0"
     val logback = "1.3.14"
     val logbackJackson = "0.1.5"
     val logbackJson = "0.1.5"
