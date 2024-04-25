@@ -1,6 +1,5 @@
 package cz.idealiste.idealvoting.server
 
-import cats.data.ValidatedNec
 import cats.implicits.*
 import cz.idealiste.idealvoting.contract
 import cz.idealiste.idealvoting.contract.definitions.LinksResponse.Links
@@ -12,7 +11,7 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import io.scalaland.chimney.cats.*
 import io.scalaland.chimney.dsl.*
-import io.scalaland.chimney.{TransformationError, Transformer, TransformerF}
+import io.scalaland.chimney.{PartialTransformer, Transformer}
 import org.http4s.*
 import org.http4s.circe.CirceEntityCodec.*
 import org.http4s.dsl.Http4sDsl
@@ -20,6 +19,7 @@ import zio.*
 import zio.interop.catz.asyncInstance
 
 import java.time.OffsetDateTime
+import scala.annotation.nowarn
 
 final case class HandlerLive(voting: Voting, clock: Clock) extends Handler {
 
@@ -27,7 +27,7 @@ final case class HandlerLive(voting: Voting, clock: Clock) extends Handler {
       body: contract.definitions.CreateElectionRequest,
       xCorrelationId: String,
   ): Task[contract.Resource.CreateElectionResponse] =
-    body.validateAs[CreateElection] match {
+    body.intoPartial[CreateElection].transform.asEitherErrorPathMessageStrings match {
       case Right(body) =>
         for {
           now <- clock.currentDateTime
@@ -43,7 +43,13 @@ final case class HandlerLive(voting: Voting, clock: Clock) extends Handler {
           resp = contract.definitions.LinksResponse(links)
         } yield respond.Created(resp)
       case Left(value) =>
-        ZIO.succeed(respond.BadRequest(contract.definitions.BadRequestResponse(value)))
+        ZIO.succeed(
+          respond.BadRequest(
+            contract.definitions.BadRequestResponse(
+              value.map((s1s2: (String, String)) => s"${s1s2._1}: ${s1s2._2}").mkString("\n"),
+            ),
+          ),
+        )
     }
 
   override def getElectionAdmin(
@@ -267,15 +273,10 @@ final case class HandlerLive(voting: Voting, clock: Clock) extends Handler {
 
 object HandlerLive {
 
-  type Validation[+A] = ValidatedNec[TransformationError[String], A]
-
-  implicit class ValidationOps[A](private val self: A) extends AnyVal {
-    def validateAs[B](implicit ev: TransformerF[Validation[+*], A, B]): Either[String, B] =
-      self.transformIntoF[Validation[+*], B].leftMap(_.iterator.mkString("\n")).toEither
-  }
-
-  implicit lazy val validationMailAddress: TransformerF[Validation[+*], String, MailAddress] =
-    string => MailAddress.parseValidated(string).leftMap(_.map(e => TransformationError(e.getMessage)))
+  @nowarn("msg=parameter failFast in anonymous function is never used")
+  implicit lazy val validationMailAddress: PartialTransformer[String, MailAddress] =
+    (string: String, failFast: Boolean) =>
+      MailAddress.parseValidated(string).leftMap(_.map(_.getMessage)).toPartialResult
 
   implicit lazy val encodingMailAddress: Transformer[MailAddress, String] =
     _.asUnicodeString

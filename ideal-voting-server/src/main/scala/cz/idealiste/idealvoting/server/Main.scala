@@ -1,5 +1,6 @@
 package cz.idealiste.idealvoting.server
 
+import cz.idealiste.idealvoting.server.Config
 import org.http4s.server.*
 import zio.*
 import zio.doobie.liquibase.ZIODoobieLiquibase

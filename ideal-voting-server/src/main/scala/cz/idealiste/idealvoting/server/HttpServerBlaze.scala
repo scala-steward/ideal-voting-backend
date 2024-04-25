@@ -1,7 +1,7 @@
 package cz.idealiste.idealvoting.server
 
 import cz.idealiste.idealvoting.server
-import cz.idealiste.idealvoting.server.HttpServerBlaze.*
+import cz.idealiste.idealvoting.server.HttpServerBlaze.Config
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Server
 import zio.*

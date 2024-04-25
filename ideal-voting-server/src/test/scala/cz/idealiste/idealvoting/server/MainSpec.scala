@@ -2,6 +2,7 @@ package cz.idealiste.idealvoting.server
 
 import cats.implicits.*
 import com.dimafeng.testcontainers.DockerComposeContainer
+import cz.idealiste.idealvoting.server.Config
 import cz.idealiste.idealvoting.server.HandlerLive.*
 import emil.MailAddress
 import emil.javamail.syntax.*

@@ -1,6 +1,7 @@
 package cz.idealiste.idealvoting.server
 
 import cats.implicits.*
+import cz.idealiste.idealvoting.server.Config
 import com.dimafeng.testcontainers.DockerComposeContainer.*
 import com.dimafeng.testcontainers.{DockerComposeContainer, ExposedService}
 import monocle.syntax.all.*
@@ -28,7 +29,7 @@ object TestContainer {
       docker <- ZIO.service[DockerComposeContainer]
       (host, port) <- docker.getHostAndPort("mariadb_1")(3306)
       config0 <- ZIO.service[Config]
-      config = config0.focus(_.dbTransactor.hikari.jdbcUrl).replace(Some(show"jdbc:mariadb://$host:$port/idealvoting"))
+      config = config0.focus(_.dbTransactor.hikari.jdbcUrl).replace(show"jdbc:mariadb://$host:$port/idealvoting")
       _ <- ZIO.logInfo(s"Modified test configuration:\n${BlackWhite(config)}.")
     } yield config
   }

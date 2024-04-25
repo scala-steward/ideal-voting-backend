@@ -124,10 +124,12 @@ lazy val idealVotingServer = project
       Dependencies.zioDoobieLiquibase,
       Dependencies.zioLoggingSlf4j,
       // Test
+      Dependencies.testcontainers % Test,
       Dependencies.zioTest % Test,
       Dependencies.zioTestcontainers % Test,
       Dependencies.zioTestSbt % Test,
     ),
+    dependencyOverrides += Dependencies.testcontainers % Test,
     ThisBuild / versionPolicyIntention := Compatibility.None,
   )
   .dependsOn(idealVotingContract)
@@ -145,7 +147,7 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
       url("https://github.com/sideeffffect"),
     ),
   ),
-  crossScalaVersions := List(DecentScala.decentScalaVersion213),
+  crossScalaVersions --= List(DecentScala.decentScalaVersion212),
   testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   missinglinkExcludedDependencies ++= List(
     moduleFilter(organization = "ch.qos.logback", name = "logback-classic"),

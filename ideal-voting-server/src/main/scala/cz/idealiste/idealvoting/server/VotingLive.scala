@@ -4,7 +4,7 @@ import cats.implicits.*
 import cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.server.Db.Election
 import cz.idealiste.idealvoting.server.Voting.*
-import cz.idealiste.idealvoting.server.VotingLive.*
+import cz.idealiste.idealvoting.server.VotingLive.Config
 import org.apache.commons.lang3.StringUtils
 import zio.*
 import zio.config.*
