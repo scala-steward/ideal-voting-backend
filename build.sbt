@@ -111,7 +111,7 @@ lazy val idealVotingServer = project
       Dependencies.circeParser,
       Dependencies.commonsLang,
       Dependencies.emil,
-      Dependencies.http4sServerBlaze,
+      Dependencies.http4sServerEmber,
       Dependencies.jackson,
       Dependencies.liquibaseSlf4j,
       Dependencies.logback,
@@ -157,7 +157,7 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
     moduleFilter(organization = "org.slf4j", name = "slf4j-api"),
   ),
   missinglinkIgnoreDestinationPackages ++= List(
-    IgnoredPackage("java.sql"), // https://github.com/tpolecat/doobie/pull/1632
+    IgnoredPackage("jnr.unixsocket"),
     IgnoredPackage("org.osgi.framework"),
   ),
   // https://github.com/olafurpg/sbt-ci-release/issues/181

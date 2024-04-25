@@ -6,10 +6,8 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="🐳 [alpine/socat:1" level="WARN"/>
-    <logger name="🐳 [docker-compose]" level="WARN"/>
-    <logger name="🐳 [testcontainers/ryuk:0" level="WARN"/>
     <logger name="com.github.dockerjava" level="WARN"/>
     <logger name="org.testcontainers" level="WARN"/>
+    <logger name="tc" level="WARN"/>
 
 </configuration>
