@@ -4,15 +4,13 @@ import cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.server.HttpServerBlaze.Config
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Server
-import zio.*
-import zio.config.*
-import zio.config.magnolia.Descriptor
-import zio.interop.catz.*
+import zio._
+import zio.config.magnolia._
+import zio.interop.catz._
 
 final case class HttpServerBlaze(config: Config, httpApp: HttpApp) extends HttpServer {
 
   lazy val server: RIO[Scope, Server] = ZIO.executorWith { executor =>
-    import zio.interop.catz.implicits.*
     BlazeServerBuilder[Task]
       .withExecutionContext(executor.asExecutionContext)
       .bindHttp(config.port, config.host)
@@ -31,8 +29,8 @@ object HttpServerBlaze {
 
   object Config {
     private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.httpServer))
-    implicit lazy val configDescriptor: ConfigDescriptor[Config] =
-      Descriptor.descriptor[Config]
+    implicit lazy val configDescriptor: DeriveConfig[Config] =
+      DeriveConfig.getDeriveConfig[Config]
   }
 
 }

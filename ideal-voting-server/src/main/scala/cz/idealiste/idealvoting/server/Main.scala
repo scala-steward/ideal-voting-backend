@@ -1,18 +1,18 @@
 package cz.idealiste.idealvoting.server
 
 import cz.idealiste.idealvoting.server.Config
-import org.http4s.server.*
-import zio.*
+import org.http4s.server._
+import zio._
 import zio.doobie.liquibase.ZIODoobieLiquibase
 import zio.logging.backend.SLF4J
 
 object Main extends ZIOAppDefault {
 
-  override def run: ZIO[ZIOAppArgs, Throwable, Nothing] =
+  override def run: ZIO[Any, Throwable, Nothing] =
     serverLayer.launch
 
   private[server] val serverLayer =
-    ZLayer.makeSome[ZIOAppArgs, Server](
+    ZLayer.make[Server](
       ZLayer.succeedEnvironment(DefaultServices.live),
       Runtime.removeDefaultLoggers,
       SLF4J.slf4j,

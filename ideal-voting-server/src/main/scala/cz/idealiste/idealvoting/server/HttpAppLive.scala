@@ -3,8 +3,7 @@ package cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.contract
 import org.http4s
 import org.http4s.server.Router
-import zio.interop.catz.*
-import zio.interop.catz.implicits.*
+import zio.interop.catz._
 import zio.{Task, ZLayer}
 
 final case class HttpAppLive(handler: Handler) extends HttpApp {

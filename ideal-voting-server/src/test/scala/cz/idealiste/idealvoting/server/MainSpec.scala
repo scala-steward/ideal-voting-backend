@@ -1,20 +1,20 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits.*
+import cats.implicits._
 import com.dimafeng.testcontainers.DockerComposeContainer
 import cz.idealiste.idealvoting.server.Config
-import cz.idealiste.idealvoting.server.HandlerLive.*
+import cz.idealiste.idealvoting.server.HandlerLive._
 import emil.MailAddress
-import emil.javamail.syntax.*
-import org.http4s.circe.CirceEntityCodec.*
-import org.http4s.implicits.*
+import emil.javamail.syntax._
+import org.http4s.circe.CirceEntityCodec._
+import org.http4s.implicits._
 import org.http4s.{Method, Request, Status, Uri}
-import zio.*
-import zio.interop.catz.*
+import zio._
+import zio.interop.catz._
 import zio.logging.backend.SLF4J
-import zio.test.Assertion.*
-import zio.test.TestAspect.*
-import zio.test.*
+import zio.test.Assertion._
+import zio.test.TestAspect._
+import zio.test._
 
 object MainSpec extends ZIOSpecDefault {
 
@@ -203,7 +203,6 @@ object MainSpec extends ZIOSpecDefault {
     ZLayer.make[Config & DockerComposeContainer](
       Runtime.removeDefaultLoggers,
       SLF4J.slf4j,
-      ZIOAppArgs.empty,
       Config.layer,
       TestContainer.dockerCompose,
     ) >>> TestContainer.layer

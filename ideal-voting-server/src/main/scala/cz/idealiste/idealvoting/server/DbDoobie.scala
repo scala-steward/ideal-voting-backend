@@ -1,17 +1,17 @@
 package cz.idealiste.idealvoting.server
 
 import cats.data.Validated
-import cats.implicits.*
+import cats.implicits._
 import cats.{Applicative, ApplicativeError}
 import cz.idealiste.idealvoting.server
-import cz.idealiste.idealvoting.server.Db.*
-import cz.idealiste.idealvoting.server.Voting.*
-import doobie.*
-import doobie.implicits.*
-import doobie.implicits.javatimedrivernative.*
+import cz.idealiste.idealvoting.server.Db._
+import cz.idealiste.idealvoting.server.Voting._
+import doobie._
+import doobie.implicits._
+import doobie.implicits.javatimedrivernative._
 import emil.MailAddress
-import emil.doobie.EmilDoobieMeta.*
-import zio.*
+import emil.doobie.EmilDoobieMeta._
+import zio._
 import zio.interop.catz.asyncInstance
 
 import java.time.OffsetDateTime

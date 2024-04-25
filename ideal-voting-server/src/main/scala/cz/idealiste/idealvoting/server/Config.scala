@@ -1,13 +1,12 @@
 package cz.idealiste.idealvoting.server
 
 import cz.idealiste.ideal.voting.server
-import monocle.Monocle.*
+import monocle.Monocle._
 import pprint.PPrinter.BlackWhite
-import zio.*
-import zio.config.*
-import zio.config.magnolia.Descriptor
-import zio.config.typesafe.*
-import zio.doobie.liquibase.*
+import zio._
+import zio.config.magnolia._
+import zio.config.typesafe._
+import zio.doobie.liquibase._
 
 final case class Config(
     dbTransactor: ZIODoobieLiquibase.Config,
@@ -17,16 +16,14 @@ final case class Config(
 
 object Config {
 
-  implicit lazy val configDescriptor: ConfigDescriptor[Config] = Descriptor.descriptor[Config]
+  implicit lazy val configDescriptor: DeriveConfig[Config] = DeriveConfig.getDeriveConfig[Config]
 
   private[server] val layer = ZLayer.fromZIO {
+    val typesafe = TypesafeConfigProvider.fromResourcePath()
+    val env = ConfigProvider.envProvider
+    val source = env.orElse(typesafe)
     for {
-      args <- ZIO.service[ZIOAppArgs]
-      typesafe = TypesafeConfigSource.fromResourcePath
-      env = ConfigSource.fromSystemEnv()
-      cmd = ConfigSource.fromCommandLineArgs(args.getArgs.toList)
-      source = cmd <> env <> typesafe
-      config <- read(implicitly[ConfigDescriptor[Config]].from(source)).orDie
+      config <- source.load(deriveConfig[Config]).orDie
       configSanitized = config.focus(_.dbTransactor.hikari.password).replace(Some("******"))
       () <- ZIO.logInfo(s"${server.BuildInfo}, configuration:\n${BlackWhite(configSanitized)}")
     } yield config

@@ -1,15 +1,14 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits.*
+import cats.implicits._
 import cz.idealiste.idealvoting.server
 import cz.idealiste.idealvoting.server.Db.Election
-import cz.idealiste.idealvoting.server.Voting.*
+import cz.idealiste.idealvoting.server.Voting._
 import cz.idealiste.idealvoting.server.VotingLive.Config
 import org.apache.commons.lang3.StringUtils
-import zio.*
-import zio.config.*
-import zio.config.magnolia.Descriptor
-import zio.interop.catz.core.*
+import zio._
+import zio.config.magnolia._
+import zio.interop.catz.core._
 
 import java.time.OffsetDateTime
 
@@ -128,6 +127,6 @@ object VotingLive {
   final case class Config(tokenLength: Int = 10)
   object Config {
     private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.voting))
-    implicit lazy val configDescriptor: ConfigDescriptor[Config] = Descriptor.descriptor[Config]
+    implicit lazy val configDescriptor: DeriveConfig[Config] = DeriveConfig.getDeriveConfig[Config]
   }
 }

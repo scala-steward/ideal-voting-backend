@@ -1,21 +1,21 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits.*
+import cats.implicits._
 import cz.idealiste.idealvoting.contract
 import cz.idealiste.idealvoting.contract.definitions.LinksResponse.Links
-import cz.idealiste.idealvoting.server.HandlerLive.*
-import cz.idealiste.idealvoting.server.Voting.*
+import cz.idealiste.idealvoting.server.HandlerLive._
+import cz.idealiste.idealvoting.server.Voting._
 import emil.MailAddress
-import emil.javamail.syntax.*
+import emil.javamail.syntax._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
-import io.scalaland.chimney.cats.*
-import io.scalaland.chimney.dsl.*
+import io.scalaland.chimney.cats._
+import io.scalaland.chimney.dsl._
 import io.scalaland.chimney.{PartialTransformer, Transformer}
-import org.http4s.*
-import org.http4s.circe.CirceEntityCodec.*
+import org.http4s._
+import org.http4s.circe.CirceEntityCodec._
 import org.http4s.dsl.Http4sDsl
-import zio.*
+import zio._
 import zio.interop.catz.asyncInstance
 
 import java.time.OffsetDateTime

@@ -1,8 +1,8 @@
 package cz.idealiste.idealvoting.server
 
 import cats.data.{NonEmptyList, NonEmptySet, ValidatedNec}
-import cats.implicits.*
-import cz.idealiste.idealvoting.server.Voting.*
+import cats.implicits._
+import cz.idealiste.idealvoting.server.Voting._
 import emil.MailAddress
 import zio.Task
 

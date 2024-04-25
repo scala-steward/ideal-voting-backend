@@ -1,13 +1,13 @@
 package cz.idealiste.idealvoting.server
 
-import cats.implicits.*
-import com.dimafeng.testcontainers.DockerComposeContainer.*
+import cats.implicits._
+import com.dimafeng.testcontainers.DockerComposeContainer._
 import com.dimafeng.testcontainers.{DockerComposeContainer, ExposedService}
 import cz.idealiste.idealvoting.server.Config
-import monocle.syntax.all.*
+import monocle.syntax.all._
 import pprint.PPrinter.BlackWhite
-import zio.*
-import zio.testcontainers.*
+import zio._
+import zio.testcontainers._
 
 import java.io.File
 

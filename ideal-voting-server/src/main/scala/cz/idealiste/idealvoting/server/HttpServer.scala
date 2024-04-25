@@ -1,7 +1,7 @@
 package cz.idealiste.idealvoting.server
 
 import org.http4s.server.Server
-import zio.*
+import zio._
 
 trait HttpServer {
   def server: RIO[Scope, Server]
