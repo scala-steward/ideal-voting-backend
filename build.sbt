@@ -147,7 +147,7 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
       url("https://github.com/sideeffffect"),
     ),
   ),
-  crossScalaVersions --= List(DecentScala.decentScalaVersion212),
+  crossScalaVersions := List(DecentScala.decentScalaVersion213),
   testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   missinglinkExcludedDependencies ++= List(
     moduleFilter(organization = "ch.qos.logback", name = "logback-classic"),
