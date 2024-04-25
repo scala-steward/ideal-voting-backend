@@ -1,9 +1,9 @@
 package cz.idealiste.idealvoting.server
 
 import cats.implicits.*
-import cz.idealiste.idealvoting.server.Config
 import com.dimafeng.testcontainers.DockerComposeContainer.*
 import com.dimafeng.testcontainers.{DockerComposeContainer, ExposedService}
+import cz.idealiste.idealvoting.server.Config
 import monocle.syntax.all.*
 import pprint.PPrinter.BlackWhite
 import zio.*
