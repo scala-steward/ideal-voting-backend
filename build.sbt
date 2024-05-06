@@ -175,3 +175,8 @@ addCommandAlias(
   "cipublish",
   "; check; idealVotingContract/versionCheck; +idealVotingContract/generateOpenApiDoc; ci-release",
 )
+
+ThisBuild / develocityConfiguration :=
+  DevelocityConfiguration(
+    buildScan = BuildScan(termsOfUse = Some(url("https://gradle.com/help/legal-terms-of-use") -> true)),
+  )
