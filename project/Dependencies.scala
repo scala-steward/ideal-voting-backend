@@ -18,7 +18,7 @@ object Dependencies {
     val monocle = "3.2.0"
     val pprint = "0.9.0"
     val snakeyaml = "2.2"
-    val zio = "2.1.1"
+    val zio = "2.1.2"
     val zioDoobie = "0.6.0"
     val zioLoggingSlf4j = "2.2.3"
 
