@@ -4,7 +4,7 @@ object Dependencies {
 
   object Versions {
 
-    val chimney = "0.8.5"
+    val chimney = "1.5.0"
     val circe = "0.14.7"
     val commonsLang = "3.15.0"
     val emil = "0.17.0"
