@@ -131,7 +131,6 @@ lazy val idealVotingServer = project
       Dependencies.zioTestcontainers % Test,
       Dependencies.zioTestSbt % Test,
     ),
-    dependencyOverrides += Dependencies.testcontainers % Test,
     ThisBuild / versionPolicyIntention := Compatibility.None,
   )
   .dependsOn(idealVotingContract)
