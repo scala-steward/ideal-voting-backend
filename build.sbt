@@ -113,6 +113,8 @@ lazy val idealVotingServer = project
       Dependencies.emil,
       Dependencies.http4sServerEmber,
       Dependencies.jackson,
+      Dependencies.liquibaseDoobieZio,
+      Dependencies.liquibaseDoobieZioConfig,
       Dependencies.liquibaseSlf4j,
       Dependencies.logback,
       Dependencies.logbackJackson,
@@ -121,7 +123,7 @@ lazy val idealVotingServer = project
       Dependencies.monocle,
       Dependencies.pprint,
       Dependencies.snakeyaml,
-      Dependencies.zioDoobieLiquibase,
+      Dependencies.zioConfigTypesafe,
       Dependencies.zioLoggingSlf4j,
       // Test
       Dependencies.testcontainers % Test,
@@ -129,7 +131,6 @@ lazy val idealVotingServer = project
       Dependencies.zioTestcontainers % Test,
       Dependencies.zioTestSbt % Test,
     ),
-    dependencyOverrides += Dependencies.testcontainers % Test,
     ThisBuild / versionPolicyIntention := Compatibility.None,
   )
   .dependsOn(idealVotingContract)
