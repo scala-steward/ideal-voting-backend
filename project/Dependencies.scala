@@ -12,7 +12,7 @@ object Dependencies {
     val jackson = "2.17.2"
     val liquibaseDoobie = "1.0.0"
     val liquibaseSlf4j = "5.0.0"
-    val logback = "1.5.6"
+    val logback = "1.5.10"
     val logbackJackson = "0.1.5"
     val logbackJson = "0.1.5"
     val mariadb = "3.4.1"
