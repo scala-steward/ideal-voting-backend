@@ -1,4 +1,4 @@
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.5.12")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.8.0")
 addSbtPlugin("com.github.sideeffffect" % "sbt-decent-scala" % "1.0.57-2-c02df126")
 addSbtPlugin("dev.guardrail" % "sbt-guardrail" % "1.0.0-M1")
 addSbtPlugin("com.gradle" % "sbt-develocity" % "1.1.1")
