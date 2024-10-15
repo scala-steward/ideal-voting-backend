@@ -5,27 +5,27 @@ object Dependencies {
   object Versions {
 
     val chimney = "0.8.5"
-    val circe = "0.14.7"
+    val circe = "0.14.10"
     val commonsLang = "3.15.0"
     val emil = "0.17.0"
-    val http4s = "0.23.27"
+    val http4s = "0.23.28"
     val jackson = "2.18.0"
     val liquibaseDoobie = "1.0.0"
     val liquibaseSlf4j = "5.0.0"
-    val logback = "1.5.6"
+    val logback = "1.5.10"
     val logbackJackson = "0.1.5"
     val logbackJson = "0.1.5"
     val mariadb = "3.4.1"
-    val monocle = "3.2.0"
+    val monocle = "3.3.0"
     val pprint = "0.9.0"
     val snakeyaml = "2.2"
-    val zio = "2.1.6"
+    val zio = "2.1.11"
     val zioConfigTypesafe = "4.0.2"
-    val zioLoggingSlf4j = "2.2.3"
+    val zioLoggingSlf4j = "2.2.4"
 
     // Test
     val testcontainers = "0.41.4"
-    val zioTestcontainers = "0.5.0"
+    val zioTestcontainers = "0.6.0"
 
   }
 
