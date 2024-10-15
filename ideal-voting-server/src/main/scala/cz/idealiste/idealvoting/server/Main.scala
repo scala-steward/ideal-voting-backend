@@ -1,9 +1,9 @@
 package cz.idealiste.idealvoting.server
 
+import com.github.sideeffffect.liquibase.doobie.zio.ZIODoobieLiquibase
 import cz.idealiste.idealvoting.server.Config
 import org.http4s.server._
 import zio._
-import zio.doobie.liquibase.ZIODoobieLiquibase
 import zio.logging.backend.SLF4J
 
 object Main extends ZIOAppDefault {
