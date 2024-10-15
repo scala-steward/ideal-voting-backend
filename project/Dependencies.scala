@@ -25,7 +25,7 @@ object Dependencies {
 
     // Test
     val testcontainers = "0.41.4"
-    val zioTestcontainers = "0.5.0"
+    val zioTestcontainers = "0.6.0"
 
   }
 
