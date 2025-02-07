@@ -20,7 +20,7 @@ object Dependencies {
     val pprint = "0.9.0"
     val snakeyaml = "2.3"
     val zio = "2.1.15"
-    val zioConfigTypesafe = "4.0.2"
+    val zioConfigTypesafe = "4.0.3"
     val zioLoggingSlf4j = "2.3.2"
 
     // Test
