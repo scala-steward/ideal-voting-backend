@@ -126,7 +126,7 @@ object VotingLive {
 
   final case class Config(tokenLength: Int = 10)
   object Config {
-    private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.voting))
+    private[server] val layer = ZLayer.fromZIO(ZIO.serviceWith[server.Config](_.voting))
     implicit lazy val configDescriptor: DeriveConfig[Config] = DeriveConfig.getDeriveConfig[Config]
   }
 }

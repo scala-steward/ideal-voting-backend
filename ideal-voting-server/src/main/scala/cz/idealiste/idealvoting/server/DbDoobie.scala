@@ -222,7 +222,7 @@ object DbDoobie {
   private[server] val layer = ZLayer.fromFunction(apply _).map(_.prune[Db])
 
   object Transactor {
-    private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.dbTransactor))
+    private[server] val layer = ZLayer.fromZIO(ZIO.serviceWith[server.Config](_.dbTransactor))
   }
 
 }

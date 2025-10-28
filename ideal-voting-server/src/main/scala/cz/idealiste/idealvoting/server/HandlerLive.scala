@@ -11,6 +11,8 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import io.scalaland.chimney.cats._
 import io.scalaland.chimney.dsl._
+import io.scalaland.chimney.partial
+import io.scalaland.chimney.partial.syntax._
 import io.scalaland.chimney.{PartialTransformer, Transformer}
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
@@ -276,7 +278,7 @@ object HandlerLive {
   @nowarn("msg=parameter failFast in anonymous function is never used")
   implicit lazy val validationMailAddress: PartialTransformer[String, MailAddress] =
     (string: String, failFast: Boolean) =>
-      MailAddress.parseValidated(string).leftMap(_.map(_.getMessage)).toPartialResult
+      MailAddress.parseValidated(string).leftMap(_.map(partial.Error.fromThrowable)).asResult
 
   implicit lazy val encodingMailAddress: Transformer[MailAddress, String] =
     _.asUnicodeString

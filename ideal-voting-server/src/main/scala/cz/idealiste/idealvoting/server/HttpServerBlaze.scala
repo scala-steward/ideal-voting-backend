@@ -33,7 +33,7 @@ object HttpServerBlaze {
   final case class Config(host: Host, port: Port)
 
   object Config {
-    private[server] val layer = ZLayer.fromZIO(ZIO.service[server.Config].map(_.httpServer))
+    private[server] val layer = ZLayer.fromZIO(ZIO.serviceWith[server.Config](_.httpServer))
     private[Config] implicit lazy val hostDeriveConfig: DeriveConfig[Host] =
       DeriveConfig[String].mapOrFail(s => Host.fromString(s).toRight(Error.InvalidData(Chunk(), s)))
     private[Config] implicit lazy val portDeriveConfig: DeriveConfig[Port] =
