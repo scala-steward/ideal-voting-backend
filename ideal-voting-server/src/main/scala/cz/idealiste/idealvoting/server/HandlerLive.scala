@@ -11,9 +11,8 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import io.scalaland.chimney.cats._
 import io.scalaland.chimney.dsl._
-import io.scalaland.chimney.partial
 import io.scalaland.chimney.partial.syntax._
-import io.scalaland.chimney.{PartialTransformer, Transformer}
+import io.scalaland.chimney.{PartialTransformer, Transformer, partial}
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.dsl.Http4sDsl
