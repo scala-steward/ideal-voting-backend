@@ -161,9 +161,7 @@ lazy val commonSettings: List[Def.Setting[_]] = DecentScala.decentScalaSettings 
     IgnoredPackage("jnr.unixsocket"),
     IgnoredPackage("org.osgi.framework"),
   ),
-  // https://github.com/olafurpg/sbt-ci-release/issues/181
-  sonatypeCredentialHost := "s01.oss.sonatype.org",
-  sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
+  scalacOptions += "-Wconf:cat=lint-infer-any&msg=kind-polymorphic:s", // https://github.com/scala/bug/issues/13128
 )
 
 lazy val generateOpenApiDocTask: TaskKey[Unit] = TaskKey[Unit]("generateOpenApiDoc")
@@ -176,8 +174,3 @@ addCommandAlias(
   "cipublish",
   "; check; idealVotingContract/versionCheck; +idealVotingContract/generateOpenApiDoc; ci-release",
 )
-
-ThisBuild / develocityConfiguration :=
-  DevelocityConfiguration(
-    buildScan = BuildScan(termsOfUse = Some(url("https://gradle.com/help/legal-terms-of-use") -> true)),
-  )
