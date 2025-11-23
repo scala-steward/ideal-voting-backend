@@ -126,7 +126,6 @@ lazy val idealVotingServer = project
       Dependencies.zioConfigTypesafe,
       Dependencies.zioLoggingSlf4j,
       // Test
-      Dependencies.testcontainers % Test,
       Dependencies.zioTest % Test,
       Dependencies.zioTestcontainers % Test,
       Dependencies.zioTestSbt % Test,

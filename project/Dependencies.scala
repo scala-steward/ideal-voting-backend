@@ -4,28 +4,27 @@ object Dependencies {
 
   object Versions {
 
-    val chimney = "1.4.0"
+    val chimney = "1.8.2"
     val circe = "0.14.15"
     val commonsLang = "3.20.0"
     val emil = "0.17.0"
     val http4s = "0.23.33"
     val jackson = "2.20.1"
-    val liquibaseDoobie = "1.0.0"
+    val liquibaseDoobie = "3.2.0"
     val liquibaseSlf4j = "5.1.0"
     val logback = "1.5.21"
     val logbackJackson = "0.1.5"
     val logbackJson = "0.1.5"
     val mariadb = "3.5.6"
     val monocle = "3.3.0"
-    val pprint = "0.9.1"
+    val pprint = "0.9.5"
     val snakeyaml = "2.5"
     val zio = "2.1.22"
     val zioConfigTypesafe = "4.0.5"
-    val zioLoggingSlf4j = "2.3.2"
+    val zioLoggingSlf4j = "2.5.1"
 
     // Test
-    val testcontainers = "0.43.6"
-    val zioTestcontainers = "0.6.0"
+    val zioTestcontainers = "0.8.0"
 
   }
 
@@ -56,7 +55,6 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Versions.zio
 
   // Test
-  val testcontainers = "com.dimafeng" %% "testcontainers-scala-core" % Versions.testcontainers
   val zioTestcontainers = "com.github.sideeffffect" %% "zio-testcontainers" % Versions.zioTestcontainers
 
 }

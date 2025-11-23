@@ -1,7 +1,6 @@
 package cz.idealiste.idealvoting.server
 
 import cats.implicits._
-import com.dimafeng.testcontainers.DockerComposeContainer
 import cz.idealiste.idealvoting.server.Config
 import cz.idealiste.idealvoting.server.HandlerLive._
 import emil.MailAddress
@@ -9,6 +8,7 @@ import emil.javamail.syntax._
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.implicits._
 import org.http4s.{Method, Request, Status, Uri}
+import org.testcontainers.containers.ComposeContainer
 import zio._
 import zio.interop.catz._
 import zio.logging.backend.SLF4J
@@ -200,7 +200,7 @@ object MainSpec extends ZIOSpecDefault {
     ).provideShared(testLayer.orDie) @@ sequential
 
   lazy val testLayerConfig: TaskLayer[Config] =
-    ZLayer.make[Config & DockerComposeContainer](
+    ZLayer.make[Config & ComposeContainer](
       Runtime.removeDefaultLoggers,
       SLF4J.slf4j,
       Config.layer,
