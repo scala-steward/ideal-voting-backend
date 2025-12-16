@@ -1,5 +1,5 @@
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.2")
-addSbtPlugin("com.github.sideeffffect" % "sbt-decent-scala" % "1.1.11")
+addSbtPlugin("com.github.sideeffffect" % "sbt-decent-scala" % "1.1.12")
 addSbtPlugin("dev.guardrail" % "sbt-guardrail" % "1.0.0-M1")
 addSbtPlugin("com.github.sideeffffect" % "sbt-github-actions-logger" % "0.1.2")
 libraryDependencies ++= List(
