@@ -18,7 +18,7 @@ object Dependencies {
     val mariadb = "3.5.8"
     val monocle = "3.3.0"
     val pprint = "0.9.6"
-    val snakeyaml = "2.5"
+    val snakeyaml = "2.6"
     val zio = "2.1.25"
     val zioConfigTypesafe = "4.0.5"
     val zioLoggingSlf4j = "2.5.1"
